@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel PET Clima — Clima, alertas e riscos à saúde</title>
+<meta name="description" content="Painel PET Clima: previsão do tempo, alertas climáticos e riscos à saúde. Versão demonstrativa com dados fictícios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛅</text></svg>">
+<style>
+/* ============================================================
+   Painel PET Clima — folha de estilo única
+   1. Tokens e reset        5. Blocos de conteúdo
+   2. Base / utilitários    6. Responsivo
+   3. Cabeçalho e navegação 7. Acessibilidade / movimento
+   4. Cartões e componentes
+   ============================================================ */
+
+/* ---------- 1. Tokens e reset ---------- */
+:root{
+  --bg:#080c18;
+  --bg-2:#0d1428;
+  --surface:rgba(255,255,255,.045);
+  --surface-2:rgba(255,255,255,.075);
+  --surface-3:rgba(255,255,255,.11);
+  --border:rgba(255,255,255,.10);
+  --border-soft:rgba(255,255,255,.06);
+  --text:#e9edf8;
+  --text-2:#c3cbdf;
+  --muted:#8d97b5;
+  --brand:#4f8cff;
+  --brand-2:#7c5cff;
+  --ok:#34d399;
+  --info:#38bdf8;
+  --warn:#fbbf24;
+  --danger:#fb923c;
+  --severe:#f87171;
+  /* cores de severidade — usadas como tinta (texto) e fundo */
+  --lvl-ok:#34d399;
+  --lvl-info:#38bdf8;
+  --lvl-atencao:#fbbf24;
+  --lvl-perigo:#fb923c;
+  --lvl-severo:#f87171;
+  --temp-start:#ffffff;
+  --temp-end:var(--brand-2);
+  --shadow:0 24px 60px -28px rgba(0,0,0,.85);
+  --shadow-sm:0 8px 24px -12px rgba(0,0,0,.6);
+  --r-lg:22px;
+  --r-md:16px;
+  --r-sm:11px;
+  --glow-1:rgba(79,140,255,.30);
+  --glow-2:rgba(124,92,255,.22);
+  --glow-3:rgba(251,146,60,.16);
+}
+html[data-theme="light"]{
+  --bg:#eef2fb;
+  --bg-2:#e3e9f8;
+  --surface:rgba(255,255,255,.72);
+  --surface-2:rgba(255,255,255,.9);
+  --surface-3:rgba(15,23,42,.05);
+  --border:rgba(15,23,42,.10);
+  --border-soft:rgba(15,23,42,.06);
+  --text:#0f172a;
+  --text-2:#334155;
+  --muted:#5b6a85;
+  --ok:#065f46;
+  --info:#075985;
+  --warn:#92400e;
+  --danger:#9a3412;
+  --severe:#991b1b;
+  --lvl-ok:#065f46;
+  --lvl-info:#075985;
+  --lvl-atencao:#92400e;
+  --lvl-perigo:#9a3412;
+  --lvl-severo:#991b1b;
+  --temp-start:#0f172a;
+  --shadow:0 24px 50px -28px rgba(15,23,42,.42);
+  --shadow-sm:0 8px 22px -14px rgba(15,23,42,.35);
+  --glow-1:rgba(79,140,255,.22);
+  --glow-2:rgba(124,92,255,.16);
+  --glow-3:rgba(251,146,60,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4,.brand-name{font-family:"Sora","Inter",sans-serif;letter-spacing:-.02em;line-height:1.2}
+button,input{font:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer}
+ul{list-style:none}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:8px}
+
+/* ---------- 2. Base / utilitários ---------- */
+.bg-decor{position:fixed;inset:0;z-index:-1;overflow:hidden;background:
+  radial-gradient(1100px 620px at 12% -8%,var(--glow-1),transparent 62%),
+  radial-gradient(900px 560px at 92% 4%,var(--glow-2),transparent 60%),
+  radial-gradient(820px 520px at 60% 104%,var(--glow-3),transparent 62%),
+  linear-gradient(180deg,var(--bg),var(--bg-2));}
+.bg-decor::after{content:"";position:absolute;inset:0;opacity:.35;
+  background-image:radial-gradient(rgba(255,255,255,.055) 1px,transparent 1px);background-size:3px 3px;}
+.shell{max-width:1280px;margin:0 auto;padding:0 clamp(16px,3vw,28px) 72px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.ic{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-fill{fill:currentColor;stroke:none}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;
+  font-size:12px;font-weight:600;letter-spacing:.01em;background:var(--surface-3);
+  border:1px solid var(--border-soft);color:var(--text-2);white-space:nowrap}
+.chip .ic{font-size:14px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:38px 0 16px;flex-wrap:wrap}
+.sec-head h2{font-size:20px;display:flex;align-items:center;gap:10px}
+.sec-head h2 .ic{font-size:20px;color:var(--brand)}
+.sec-head p{font-size:13px;color:var(--muted)}
+
+/* ---------- 3. Cabeçalho e navegação ---------- */
+.site-header{position:sticky;top:0;z-index:50;backdrop-filter:blur(18px);
+  background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom:1px solid var(--border-soft)}
+.header-inner{display:flex;align-items:center;gap:18px;padding:13px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+.brand-mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;
+  box-shadow:0 10px 26px -10px var(--brand)}
+.brand-text{display:flex;flex-direction:column;line-height:1.1}
+.brand-name{font-size:17px;font-weight:800}
+.brand-sub{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.02em}
+
+.search{position:relative;flex:0 1 340px;min-width:200px}
+.search-box{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:13px;
+  background:var(--surface);border:1px solid var(--border);transition:.2s}
+.search-box:focus-within{border-color:var(--brand);background:var(--surface-2);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 18%,transparent)}
+.search-box .ic{font-size:17px;color:var(--muted)}
+.search-box input{flex:1;min-width:0;background:none;border:none;outline:none;font-size:14px}
+.search-box input::placeholder{color:var(--muted)}
+.search-results{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;
+  background:var(--surface-2);backdrop-filter:blur(20px);border:1px solid var(--border);
+  border-radius:14px;box-shadow:var(--shadow);overflow:hidden;display:none}
+.search-results.open{display:block}
+.search-results li{padding:10px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px}
+.search-results li:hover,.search-results li.sel{background:var(--surface-3)}
+.search-results li small{margin-left:auto;color:var(--muted);font-size:11px}
+.search-results li .ic{font-size:15px;color:var(--brand)}
+.icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:18px;
+  background:var(--surface);border:1px solid var(--border);color:var(--text-2);transition:.2s}
+.icon-btn:hover{background:var(--surface-2);color:var(--text);transform:translateY(-1px)}
+.icon-btn.on{background:color-mix(in srgb,var(--brand) 20%,transparent);border-color:var(--brand);color:var(--text)}
+.subnav{position:sticky;top:69px;z-index:40;backdrop-filter:blur(14px);
+  background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--border-soft)}
+.subnav ul{display:flex;gap:4px;overflow-x:auto;padding:9px 0;scrollbar-width:none}
+.subnav ul::-webkit-scrollbar{display:none}
+.subnav a{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:10px;
+  font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;transition:.18s}
+.subnav a:hover{color:var(--text);background:var(--surface)}
+.subnav a.active{color:var(--text);background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 26%,transparent),color-mix(in srgb,var(--brand-2) 18%,transparent));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 42%,transparent)}
+.subnav a .ic{font-size:15px}
+
+/* ---------- 4. Cartões e componentes ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm);backdrop-filter:blur(14px);position:relative;overflow:hidden}
+.card-pad{padding:22px}
+.grid-top{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:16px;margin-top:22px}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+
+/* Hero */
+.hero{padding:26px;display:flex;flex-direction:column;gap:20px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+.place{display:flex;flex-direction:column;gap:5px}
+.place-name{font-size:25px;font-weight:800;display:flex;align-items:center;gap:9px}
+.place-name .ic{font-size:19px;color:var(--brand)}
+.place-meta{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.live{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-weight:600}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.6)}70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.now{display:flex;align-items:center;gap:20px}
+.now-icon{font-size:70px;line-height:1;color:var(--warn);filter:drop-shadow(0 8px 22px rgba(251,191,36,.35))}
+.now-temp{font-family:"Sora",sans-serif;font-size:78px;font-weight:800;line-height:.92;letter-spacing:-.05em;
+  background:linear-gradient(135deg,var(--temp-start) 8%,var(--brand) 58%,var(--temp-end));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.now-info{display:flex;flex-direction:column;gap:7px}
+.now-cond{font-size:19px;font-weight:700;font-family:"Sora",sans-serif}
+.now-feels{font-size:13.5px;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.metric{background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:13px 14px;
+  display:flex;flex-direction:column;gap:5px;transition:.2s}
+.metric:hover{border-color:var(--border);transform:translateY(-2px)}
+.metric .m-top{display:flex;align-items:center;gap:7px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.metric .m-top .ic{font-size:14px}
+.metric .m-val{font-size:19px;font-weight:700;font-family:"Sora",sans-serif}
+.metric .m-sub{font-size:11.5px;color:var(--muted)}
+
+/* Gauge */
+.gauge-card{padding:24px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
+.gauge-wrap{position:relative;width:200px;height:200px}
+.gauge-wrap svg{transform:rotate(-90deg);overflow:visible}
+.gauge-track{fill:none;stroke:var(--surface-3);stroke-width:13;stroke-linecap:round}
+.gauge-arc{fill:none;stroke-width:13;stroke-linecap:round;stroke-dasharray:439.8;stroke-dashoffset:439.8;
+  transition:stroke-dashoffset 1.3s cubic-bezier(.22,1,.36,1)}
+.gauge-center{position:absolute;inset:0;display:grid;place-content:center;gap:2px}
+.gauge-score{font-family:"Sora",sans-serif;font-size:46px;font-weight:800;line-height:1}
+.gauge-label{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.gauge-cap{font-size:12.5px;color:var(--muted);max-width:300px}
+.gauge-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+
+/* Highlights */
+.highlights{width:100%;display:flex;flex-direction:column;gap:9px;text-align:left}
+.highlight{display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border-radius:13px;
+  background:var(--surface-2);border:1px solid var(--border-soft);font-size:13px;color:var(--text-2)}
+.highlight .ic{font-size:16px;margin-top:1px}
+.highlight b{color:var(--text)}
+
+/* Alerts */
+.alert-list{display:flex;flex-direction:column;gap:11px}
+.alert{display:flex;gap:15px;padding:16px 18px;border-radius:var(--r-md);background:var(--surface);
+  border:1px solid var(--border-soft);position:relative;overflow:hidden;transition:.22s}
+.alert::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--lvl)}
+.alert:hover{background:var(--surface-2);transform:translateX(3px)}
+.alert-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none;
+  background:color-mix(in srgb,var(--lvl) 16%,transparent);color:var(--lvl);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lvl) 30%,transparent)}
+.alert-body{flex:1;min-width:0}
+.alert-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.alert-title{font-size:15px;font-weight:700;font-family:"Sora",sans-serif}
+.lvl-tag{padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  background:color-mix(in srgb,var(--lvl) 18%,transparent);color:var(--lvl);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lvl) 34%,transparent)}
+.alert-text{font-size:13.5px;color:var(--muted);margin-top:5px}
+.alert-when{font-size:11.5px;color:var(--muted);margin-top:7px;display:flex;align-items:center;gap:6px}
+.alert-toggle{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--muted);
+  border:1px solid var(--border-soft);align-self:center;transition:.2s}
+.alert-toggle:hover{color:var(--text);background:var(--surface-3)}
+.alert-toggle .ic{font-size:15px;transition:transform .25s}
+.alert.open .alert-toggle .ic{transform:rotate(180deg)}
+.alert-extra{max-height:0;overflow:hidden;transition:max-height .3s ease,margin .3s ease;margin-top:0}
+.alert.open .alert-extra{margin-top:11px}
+.tip{display:flex;gap:10px;padding:12px 14px;border-radius:13px;font-size:13px;color:var(--text-2);
+  background:color-mix(in srgb,var(--ok) 10%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ok) 26%,transparent)}
+.tip .ic{font-size:16px;color:var(--ok);margin-top:1px}
+.tip b{color:var(--text)}
+
+/* Health */
+.health-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:13px}
+.health{padding:19px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--border-soft);
+  display:flex;flex-direction:column;gap:12px;transition:.22s;position:relative;overflow:hidden}
+.health:hover{transform:translateY(-3px);border-color:var(--border);box-shadow:var(--shadow-sm)}
+.health-top{display:flex;align-items:flex-start;gap:12px}
+.health-ico{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:20px;flex:none;
+  background:color-mix(in srgb,var(--lvl) 15%,transparent);color:var(--lvl);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lvl) 28%,transparent)}
+.health h3{font-size:15.5px}
+.health-cat{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.health-desc{font-size:13.5px;color:var(--text-2)}
+.groups{display:flex;flex-wrap:wrap;gap:6px}
+.groups span{font-size:11px;font-weight:600;padding:4px 9px;border-radius:8px;
+  background:var(--surface-3);border:1px solid var(--border-soft);color:var(--muted)}
+.groups span.hot{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger);
+  border-color:color-mix(in srgb,var(--danger) 26%,transparent)}
+.health-tip{font-size:12.5px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;
+  padding-top:11px;border-top:1px dashed var(--border-soft)}
+.health-tip .ic{font-size:14px;color:var(--brand);margin-top:2px}
+
+/* Hourly */
+.hourly-scroll{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}
+.hourly-scroll::-webkit-scrollbar{height:6px}
+.hourly-scroll::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:99px}
+.hour{flex:none;width:64px;padding:13px 8px;border-radius:14px;text-align:center;
+  background:var(--surface-2);border:1px solid var(--border-soft);display:flex;flex-direction:column;gap:7px;align-items:center}
+.hour.now-hour{border-color:color-mix(in srgb,var(--brand) 55%,transparent);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 20%,transparent),var(--surface-2))}
+.hour-h{font-size:11px;color:var(--muted);font-weight:600}
+.hour-ic{font-size:23px;color:var(--warn)}
+.hour-t{font-size:15px;font-weight:700;font-family:"Sora",sans-serif}
+.hour-p{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--info);font-weight:600}
+.hour-p .ic{font-size:12px}
+
+/* 7 dias */
+.week{display:flex;flex-direction:column;gap:6px}
+.week-row{display:grid;grid-template-columns:96px 34px 1fr 74px 78px;align-items:center;gap:12px;
+  padding:11px 13px;border-radius:13px;transition:.18s}
+.week-row:hover{background:var(--surface-2)}
+.week-row.today{background:linear-gradient(90deg,color-mix(in srgb,var(--brand) 15%,transparent),transparent);
+  box-shadow:inset 2px 0 0 var(--brand)}
+.week-day{font-size:13.5px;font-weight:600}
+.week-day small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.week-ic{font-size:21px;color:var(--warn);text-align:center}
+.week-bar{position:relative;height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.week-bar span{position:absolute;top:0;bottom:0;border-radius:99px;
+  background:linear-gradient(90deg,#38bdf8,#fbbf24,#fb923c)}
+.week-temps{display:flex;justify-content:flex-end;gap:9px;font-size:13.5px;font-weight:600}
+.week-temps b{font-weight:700}
+.week-temps small{color:var(--muted)}
+.week-rain{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--info);font-weight:600}
+.week-rain .ic{font-size:13px}
+.risk-badge{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;text-align:center;
+  background:color-mix(in srgb,var(--lvl) 15%,transparent);color:var(--lvl);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lvl) 28%,transparent)}
+
+/* Ar */
+.air-grid{display:flex;flex-direction:column;gap:13px}
+.pollutant{display:grid;grid-template-columns:62px 1fr 74px;align-items:center;gap:12px}
+.poll-name{font-size:12.5px;color:var(--text-2);font-weight:600}
+.poll-track{height:7px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.poll-fill{height:100%;border-radius:99px;width:0;transition:width 1s cubic-bezier(.22,1,.36,1)}
+.poll-val{font-size:12.5px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.aqi-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding-bottom:14px;border-bottom:1px dashed var(--border-soft)}
+.aqi-scale{display:flex;height:9px;border-radius:99px;overflow:hidden;margin-top:14px}
+.aqi-scale i{flex:1}
+.aqi-legend{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px}
+
+/* Footer */
+.site-footer{margin-top:44px;padding:26px;border-radius:var(--r-lg);background:var(--surface);
+  border:1px solid var(--border-soft);display:flex;flex-direction:column;gap:14px}
+.footer-note{display:flex;gap:12px;font-size:12.5px;color:var(--muted);align-items:flex-start}
+.footer-note .ic{font-size:16px;margin-top:1px;color:var(--warn);flex:none}
+.footer-note b{color:var(--text-2)}
+.footer-tags{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);z-index:200;
+  padding:12px 18px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);
+  box-shadow:var(--shadow);font-size:13.5px;display:flex;align-items:center;gap:9px;
+  transition:transform .35s cubic-bezier(.22,1,.36,1);max-width:min(92vw,460px)}
+.toast.show{transform:translate(-50%,0)}
+.toast .ic{font-size:17px;color:var(--brand)}
+
+/* ---------- 6. Responsivo ---------- */
+@media (max-width:1000px){
+  .grid-top{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr}
+}
+@media (max-width:720px){
+  .header-inner{gap:11px}
+  .brand-sub{display:none}
+  .search{order:3;flex:1 1 100%}
+  .subnav{top:0;position:static}
+  .now-temp{font-size:60px}
+  .now-icon{font-size:54px}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .week-row{grid-template-columns:74px 28px 1fr 60px;gap:9px}
+  .week-row .risk-badge{display:none}
+  .week-rain{justify-content:flex-end}
+  .pollutant{grid-template-columns:56px 1fr 66px}
+}
+@media (max-width:460px){
+  .metrics{grid-template-columns:1fr 1fr}
+  .card-pad,.hero,.gauge-card{padding:17px}
+}
+
+/* ---------- 7. Acessibilidade / movimento ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+@media print{.site-header,.subnav,.toast{display:none}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="bg-decor"></div>
+
+<!-- ============ CABEÇALHO ============ -->
+<header class="site-header">
+  <div class="shell header-inner">
+    <div class="brand">
+      <div class="brand-mark">⛅</div>
+      <div class="brand-text">
+        <span class="brand-name">Painel PET Clima</span>
+        <span class="brand-sub">Clima, alertas e riscos à saúde</span>
+      </div>
+      <span class="chip" title="Esta versão usa dados fictícios, sem conexão com APIs reais.">
+        <span class="ic ic-fill" style="font-size:9px">●</span> Dados demonstrativos
+      </span>
+    </div>
+
+    <div class="search">
+      <div class="search-box">
+        <span class="ic" id="searchIcon"></span>
+        <input id="cityInput" type="text" placeholder="Buscar cidade…" autocomplete="off" role="combobox"
+               aria-expanded="false" aria-controls="searchResults" aria-label="Buscar cidade">
+      </div>
+      <ul class="search-results" id="searchResults" role="listbox" aria-label="Cidades"></ul>
+    </div>
+
+    <button class="icon-btn" id="geoBtn" title="Usar minha localização" aria-label="Usar minha localização"></button>
+    <button class="icon-btn" id="themeBtn" title="Alternar tema claro/escuro" aria-label="Alternar tema"></button>
+  </div>
+</header>
+
+<!-- ============ SUBNAVEGAÇÃO ============ -->
+<nav class="subnav" aria-label="Seções do painel">
+  <div class="shell">
+    <ul>
+      <li><a href="#agora" data-nav><span class="ic" data-ic="sun"></span>Agora</a></li>
+      <li><a href="#alertas" data-nav><span class="ic" data-ic="alert"></span>Alertas climáticos</a></li>
+      <li><a href="#saude" data-nav><span class="ic" data-ic="heart"></span>Riscos à saúde</a></li>
+      <li><a href="#horario" data-nav><span class="ic" data-ic="clock"></span>Próximas 24h</a></li>
+      <li><a href="#semana" data-nav><span class="ic" data-ic="calendar"></span>7 dias</a></li>
+      <li><a href="#ar" data-nav><span class="ic" data-ic="wind"></span>Qualidade do ar</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="shell">
+
+  <!-- ============ AGORA ============ -->
+  <section id="agora" class="sec-top">
+    <div class="grid-top">
+      <!-- Hero -->
+      <article class="card hero">
+        <div class="hero-top">
+          <div class="place">
+            <h1 class="place-name"><span class="ic" id="placePin"></span><span id="placeName">—</span></h1>
+            <div class="place-meta">
+              <span id="placeRegion">—</span>
+              <span>·</span>
+              <span id="placeDate">—</span>
+              <span>·</span>
+              <span class="live"><i></i> atualização <span id="placeTime">—</span></span>
+            </div>
+          </div>
+          <div class="chip" id="heroBadge">—</div>
+        </div>
+
+        <div class="now">
+          <div class="now-icon" id="nowIcon"></div>
+          <div>
+            <div class="now-temp" id="nowTemp">—</div>
+            <div class="now-info">
+              <span class="now-cond" id="nowCond">—</span>
+              <span class="now-feels" id="nowFeels">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics" id="metrics"></div>
+      </article>
+
+      <!-- Gauge -->
+      <article class="card gauge-card">
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 180 180" width="200" height="200" aria-hidden="true">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#34d399"/>
+                <stop offset="45%" stop-color="#fbbf24"/>
+                <stop offset="100%" stop-color="#f87171"/>
+              </linearGradient>
+            </defs>
+            <circle class="gauge-track" cx="90" cy="90" r="70"/>
+            <circle class="gauge-arc" id="gaugeArc" cx="90" cy="90" r="70" stroke="url(#gaugeGrad)"/>
+          </svg>
+          <div class="gauge-center">
+            <span class="gauge-score" id="gaugeScore">—</span>
+            <span class="gauge-label" id="gaugeLabel">—</span>
+          </div>
+        </div>
+        <p class="gauge-cap" id="gaugeCap">—</p>
+        <div class="gauge-chips" id="gaugeChips"></div>
+        <div class="highlights" id="highlights"></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ ALERTAS CLIMÁTICOS ============ -->
+  <section id="alertas">
+    <div class="sec-head">
+      <div>
+        <h2><span class="ic" data-ic="alert"></span>Alertas climáticos</h2>
+        <p>Condições meteorológicas extremos detectados para a localitye selecionada.</p>
+      </div>
+      <span class="chip" id="alertCount">—</span>
+    </div>
+    <div class="alert-list" id="alertList"></div>
+  </section>
+
+  <!-- ============ RISCOS À SAÚDE ============ -->
+  <section id="saude">
+    <div class="sec-head">
+      <div>
+        <h2><span class="ic" data-ic="heart"></span>Riscos à saúde</h2>
+        <p>Como o clima atual pode afetar a saúde — e quem está mais vulnerável.</p>
+      </div>
+      <span class="chip" id="healthCount">—</span>
+    </div>
+    <div class="health-grid" id="healthGrid"></div>
+  </section>
+
+  <!-- ============ HORÁRIO + AR ============ -->
+  <section id="horario" class="grid-2" style="margin-top:38px">
+    <article class="card card-pad">
+      <div class="sec-head" style="margin:0 0 14px">
+        <div>
+          <h2><span class="ic" data-ic="clock"></span>Próximas 24 horas</h2>
+          <p>Temperatura e chance de precipitação por hora.</p>
+        </div>
+      </div>
+      <div class="hourly-scroll" id="hourly"></div>
+    </article>
+
+    <article class="card card-pad" id="ar">
+      <div class="sec-head" style="margin:0 0 14px">
+        <div>
+          <h2><span class="ic" data-ic="wind"></span>Qualidade do ar</h2>
+          <p>Concentração de poluentes e índice AQI.</p>
+        </div>
+      </div>
+      <div class="air-grid" id="airGrid"></div>
+    </article>
+  </section>
+
+  <!-- ============ 7 DIAS ============ -->
+  <section id="semana">
+    <div class="sec-head">
+      <div>
+        <h2><span class="ic" data-ic="calendar"></span>Previsão para 7 dias</h2>
+        <p>Mínima, máxima, chance de chuva e nível de risco estimado.</p>
+      </div>
+      <span class="chip">Escala: baixa · média · alta · extrema</span>
+    </div>
+    <div class="card card-pad">
+      <div class="week" id="week"></div>
+    </div>
+  </section>
+
+  <!-- ============ RODAPÉ ============ -->
+  <footer class="site-footer">
+    <div class="footer-note">
+      <span class="ic" data-ic="info"></span>
+      <div><b>Versão demonstrativa.</b> Todos os números, alertas e riscos exibidos são <b>fictícios</b>, criados
+      apenas para demonstrar a interface. Nenhuma API real é consultada e nenhuma regra de limiar é aplicada.</div>
+    </div>
+    <div class="footer-note">
+      <span class="ic" data-ic="shield"></span>
+      <div>Esta ferramenta <b>não substitui orientação médica</b>. Em caso de sintomas intensos, procure um
+      profissional de saúde. Em emergências, ligue <b>192</b> (SAMU) ou <b>193</b> (Corpo de Bombeiros).</div>
+    </div>
+    <div class="footer-tags">
+      <span class="chip">Painel PET Clima</span>
+      <span class="chip">Dados fictícios</span>
+      <span class="chip">Sem dependências</span>
+      <span class="chip">Arquivo único</span>
+    </div>
+  </footer>
+</main>
+
+<div class="toast" id="toast"><span class="ic" data-ic="info"></span><span id="toastText"></span></div>
+
+<script>
+/* ============================================================
+   Painel PET Clima — script único
+   Bloco 1: ícones SVG
+   Bloco 2: dados fictícios (MOCK)          ← ponto de troca por fetch()
+   Bloco 3: helpers de apresentação
+   Bloco 4: renderização
+   Bloco 5: interação (busca, tema, acordeão, scroll)
+   ============================================================ */
+
+/* ---------- Bloco 1: ícones ---------- */
+const ICONS = {
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/>',
+  moon:'<path d="M20.5 14.8A8.5 8.5 0 019.6 3.6 8.6 8.6 0 1020.5 14.8z"/>',
+  'cloud-sun':'<circle cx="8" cy="7.6" r="2.8"/><path d="M8 2.6v1.3M4.3 7.6h1.3M5.2 4.8l.9.9M11.7 4.8l-.9.9"/><path d="M10.4 19.4h7.4a3.4 3.4 0 00.3-6.8 4.7 4.7 0 00-8.9-1.2 3.5 3.5 0 001.2 8z"/>',
+  partly:'<circle cx="8" cy="7.6" r="2.8"/><path d="M8 2.6v1.3M4.3 7.6h1.3M5.2 4.8l.9.9M11.7 4.8l-.9.9"/><path d="M10.4 19.4h7.4a3.4 3.4 0 00.3-6.8 4.7 4.7 0 00-8.9-1.2 3.5 3.5 0 001.2 8z"/>',
+  cloud:'<path d="M7.4 18.4h9.3a3.7 3.7 0 00.3-7.4A5.1 5.1 0 008 9.8 3.8 3.8 0 007.4 18.4z"/>',
+  rain:'<path d="M7.4 15.4h9.3a3.7 3.7 0 00.3-7.4A5.1 5.1 0 008 6.8 3.8 3.8 0 007.4 15.4z"/><path d="M9.4 18.4l-1 2.4M13.4 18.4l-1 2.4M17.4 18.4l-1 2.4"/>',
+  storm:'<path d="M7.4 14.6h9.3a3.7 3.7 0 00.3-7.4A5.1 5.1 0 008 6 3.8 3.8 0 007.4 14.6z"/><path d="M13 16.6l-2.6 3.6h2.8l-1.1 2.9 3.7-4.3h-2.7l1.3-2.2z"/>',
+  fog:'<path d="M7.4 13.6h9.3a3.7 3.7 0 00.3-7.4A5.1 5.1 0 008 5 3.8 3.8 0 007.4 13.6z"/><path d="M4.5 17h15M6.8 20.4h10.4"/>',
+  snow:'<path d="M7.4 14.4h9.3a3.7 3.7 0 00.3-7.4A5.1 5.1 0 008 5.8 3.8 3.8 0 007.4 14.4z"/><path d="M9 18h.01M12 20.2h.01M15 18h.01M10.5 19.6h.01M13.5 19.6h.01"/>',
+  alert:'<path d="M12 3.6L21.2 19.4H2.8L12 3.6z"/><path d="M12 9.6v4.2M12 16.9h.01"/>',
+  heart:'<path d="M12 20.3l-1.4-1.3C5.4 14.3 2.6 11.8 2.6 8.7 2.6 6.1 4.7 4 7.3 4c1.5 0 2.9.7 3.8 1.8C12 4.7 13.4 4 14.9 4c2.6 0 4.7 2.1 4.7 4.7 0 3.1-2.8 5.6-8 10.3z"/>',
+  thermometer:'<path d="M14 14.8V4.6a2 2 0 10-4 0v10.2a4 4 0 104 0z"/><path d="M12 8.5v7"/>',
+  droplet:'<path d="M12 3.2s6 6.1 6 9.9a6 6 0 11-12 0c0-3.8 6-9.9 6-9.9z"/>',
+  wind:'<path d="M3 8.5h9.5a2.8 2.8 0 10-2.8-2.8M3 12.5h13.5a2.8 2.8 0 11-2.8 2.8M3 16.5h6.5"/>',
+  'rain-drop':'<path d="M7 15.6h9a3.4 3.4 0 00.3-6.8A4.7 4.7 0 008 7.4 3.5 3.5 0 007 15.6z"/><path d="M9.6 18.4l-.9 2.2M13.6 18.4l-.9 2.2"/>',
+  uv:'<circle cx="12" cy="12" r="3.6"/><path d="M12 2.6v2M12 19.4v2M2.6 12h2M19.4 12h2M5.4 5.4l1.4 1.4M17.2 17.2l1.4 1.4M18.6 5.4l-1.4 1.4M6.8 17.2l-1.4 1.4"/>',
+  gauge:'<path d="M4 17.5a9 9 0 1116 0"/><path d="M12 14.4l4-4.4"/><circle cx="12" cy="15.6" r="1.6"/>',
+  clock:'<circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.2 2"/>',
+  calendar:'<rect x="3.6" y="5.2" width="16.8" height="15.2" rx="2.4"/><path d="M3.6 10h16.8M8.4 3v4M15.6 3v4"/>',
+  search:'<circle cx="10.8" cy="10.8" r="6.4"/><path d="M15.6 15.6L20.4 20.4"/>',
+  pin:'<path d="M12 21.2s7-5.6 7-10.4a7 7 0 10-14 0c0 4.8 7 10.4 7 10.4z"/><circle cx="12" cy="10.6" r="2.6"/>',
+  palette:'<circle cx="12" cy="12" r="9.2"/><path d="M8.4 14.6a1.6 1.6 0 100 3.2 1.6 1.6 0 000-3.2zM12 3.2a9 9 0 000 18"/>',
+  chevron:'<path d="M6 9.5l6 6 6-6"/>',
+  info:'<circle cx="12" cy="12" r="8.8"/><path d="M12 11v5.4M12 7.8h.01"/>',
+  shield:'<path d="M12 3.2l7.2 2.8v5.4c0 4.3-3 7.9-7.2 9.4-4.2-1.5-7.2-5.1-7.2-9.4V6L12 3.2z"/><path d="M9.2 12.2l2 2 3.6-3.8"/>',
+  bulb:'<path d="M9.4 17.4a5.6 5.6 0 115.2 0v1.4H9.4v-1.4z"/><path d="M10 21h4"/>',
+  leaf:'<path d="M4.6 19.4C3 13.6 7 6.6 19.4 5.2c1 8.6-4 12.6-9.8 12.4-2.4 0-4-.2-5 1.8z"/>',
+  skin:'<path d="M12 3.6c3.4 0 6.2 2.8 6.2 6.2 0 4.4-3 7-6.2 10.8-3.2-3.8-6.2-6.4-6.2-10.8 0-3.4 2.8-6.2 6.2-6.2z"/>',
+  lung:'<path d="M12 3.4v9.2"/><path d="M12 8.4c-1.6-2.4-4.8-3-6.2-.6-1.4 2.4-.6 6.4-.2 8.6.3 1.8 2 2.8 3.6 2.4 1.8-.4 2.8-1.8 2.8-3.4z"/><path d="M12 8.4c1.6-2.4 4.8-3 6.2-.6 1.4 2.4.6 6.4.2 8.6-.3 1.8-2 2.8-3.6 2.4-1.8-.4-2.8-1.8-2.8-3.4z"/>',
+  fever:'<path d="M14 14.8V4.6a2 2 0 10-4 0v10.2a4 4 0 104 0z"/><path d="M12 17.6h.01M12 8.4h.01"/>',
+  mosquito:'<path d="M8.6 9.4l6.8 5M8.6 14.4l6.8-5"/><circle cx="12" cy="12" r2"/><path d="M8.6 9.4L5 6.8M8.6 14.4L5 17M15.4 14.4L19 17M15.4 9.4L19 6.8"/>',
+  house:'<path d="M4 10.4L12 4l8 6.4V20H4v-9.6z"/><path d="M9.6 20v-5.4h4.8V20"/>',
+  walking:'<circle cx="13" cy="4.4" r="2"/><path d="M11 21l1.6-5.6-2.4-2.4.8-4.4 3.2 1.2 2.4 2.6M12 9.6L8.6 12l-.8 3.4"/>',
+  sparkle:'<path d="M12 3l1.9 5.3L19 10.2l-5.1 1.9L12 17.4l-1.9-5.3L5 10.2l5.1-1.9L12 3z"/>'
+};
+
+const icPath = (name) => ICONS[name] || ICONS.info;
+const ic = (name, cls='ic') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${icPath(name)}</svg>`;
+
+/* ---------- Bloco 2: dados fictícios ----------
+   >>> ESTE É O ÚNICO BLOCO QUE MUDA NA VERSÃO REAL <<<
+   Troque cada `cities[id]` por uma resposta de API (ex.: Open-Meteo)
+   e mantenha o mesmo formato. Nada aqui consulta a rede.            */
+
+const cities = {
+  santiago: {
+    id:'santiago', name:'Santiago', region:'Santiago · Rs', regionShort:'Sudeste',
+    temp:34, feels:37, humidity:38, wind:12, gust:26, precip:0, pressure:1008, uv:11,
+    cond:'clear', condLabel:'Céu limpo', min:21, max:36, badge:'Calor intenso',
+    risk:{score:78,label:'Alto',cap:'Calor extremo com ar seco e radiação UV elevada. Risco relevante de desidratação, insolação e agravamento de problemas cardiovasculares.'},
+    alerts:[
+      {lvl:'perigo',icon:'thermometer',title:'Onda de calor intensa',text:'Temperaturas entre 33°C e 36°C, com sensação térmica acima de 37°C durante o pico da tarde.',when:'Hoje, 11h às 17h',tip:'Evite exercícios ao ar livre entre 11h e 17h. Beba água a cada 30 minutos e passeie com pets somente em horários amenos ou na sombra.'},
+      {lvl:'severo',icon:'uv',title:'Radiação UV extrema',text:'Índice de radiação ultravioleta no nível 11, com risco de queimadura solar em menos de 15 minutos de exposição.',when:'Hoje, 10h às 16h',tip:'Use protetor solar FPS 60+, chapéu de aba larga e óculos com proteção UV. Prefira áreas sombreadas e techados.'},
+      {lvl:'atencao',icon:'droplet',title:'Ar seco e desidratante',text:'Umidade relativa entre 35% e 45%, com baixo índice de hidratação do ar e acúmulo de poeira.',when:'Hoje, o dia todo',tip:'Hidrate-se bastante e use umidificadores em ambientes fechados. Evite esforço físico em locais muito ventilados e com poeira.'},
+      {lvl:'perigo',icon:'rain-drop',title:'Chuva forte e alagamentos à noite',text:'Precipitação intensa esperada à noite, com acúmulo rápido de água em ruas de fundo e baixadas.',when:'Amanhã, 19h às 23h',tip:'Não atravesse áreas alagadas — 30 cm de água já alcançam o piso de um carro. Verifique a previsão antes de sair.'},
+      {lvl:'atencao',icon:'wind',title:'Poluição do ar moderada',text:'Material particulado (PM2.5) acima do recomendado para grupos sensíveis, por acúmulo de poeira e poluição do trânsito.',when:'Hoje, 8h às 18h',tip:'Pessoas com asma, rinite ou doença cardiovascular devem reduzir exercícios ao ar livre e usar máscara em áreas com muito trânsito.'},
+      {lvl:'info',icon:'wind',title:'Rajadas de vento moderadas',text:'Rajadas entre 40 e 55 km/h, suficientes para derrubar galhos pequenos e levantar poeira.',when:'Hoje, 13h às 18h',tip:'Prenda objetos soltos em varandas, recolha o que estiver ao ar livre e evite estacionar sob árvores grandes.'}
+    ],
+    health:[
+      {lvl:'perigo',icon:'fever',cat:'Termorregulação',title:'Desidratação e insolação',desc:'O calor com baixa umidade acelera a perda de água e eletrólitos, e o esforço ao ar livre pode levar a tontura, confusão e insolação em poucas horas.',groups:['Crianças','Idosos','Atletas','Trabalhadores de rua','Animais de estimação'],tip:'Água antes da sede. Ofereça água fresca aos pets em intervalos curtos e jamais deixe pets parados no sol.'},
+      {lvl:'perigo',icon:'heart',cat:'Cardiovascular',title:'Golpe de calor e sobrecarga cardíaca',desc:'O calor aumenta a demanda do coração e a perda de sal e água, elevando o risco de angina, arritmia e pressão alta em pessoas com doença cardiovascular.',groups:['Hipertensos','Cardiopatas','Diabéticos','Idosos'],tip:'Mantenha os medicamentos em ambiente fresco e evite esforço físico. Em caso de tontura, dor no peito ou confusão, procure atendimento.'},
+      {lvl:'atencao',icon:'skin',cat:'Dermatológico',title:'Queimadura de sol e fotoaging',desc:'UV extremo causa queimaduras, manchas e acelerar o envelhecimento da pele, além de elevar o risco de câncer de pele a longo prazo.',groups:['Crianças','Pessoas de pele clara','Quem faz tratamento com fotossensíveis'],tip:'Repita o protetor solar a cada 2 horas e evite exposição entre 10h e 16h.'},
+      {lvl:'atencao',icon:'lung',cat:'Respiratório',title:'Irritação das vias aéreas pelo ar seco',desc:'A umidade baixa resseca mucosas, adelgaça o muco e aumenta a irritação da garganta e a tosse, além de favorecer crises de asma.',groups:['Asmáticos','Rinites','Pessoas com bronquite'],tip:'Hidratação, umidificador eaventuação dos broncodilatadores conforme orientação médica.'},
+      {lvl:'atencao',icon:'lung',cat:'Respiratório',title:'Agravamento de asma pela poluição',desc:'A combinação de poeira em suspensão e partículas finas pode desencadear broncoespasmo em pessoas sensíveis.',groups:['Asmáticos','Alérgicos','Crianças','Idosos'],tip:'Reduza a exposição em vias movimentadas e verifique a qualidade do ar antes de atividades físicas.'},
+      {lvl:'info',icon:'droplet',cat:'Infeccioso',title:'Água parada e proliferação do Aedes',desc:'Chuvas recentes deixam água acumulada em calhas, vasos e pneus, criando foco para o mosquito da dengue.',groups:['Todo público','Animais de estimação'],tip:'Elimine água parada da casa pelo menos uma vez por semana e use repelente em pets.'}
+    ],
+    air:{pm25:38,pm10:62,o3:78,no2:44,aqi:92,label:'Moderado',advice:'Ar aceitável para a maioria das pessoas. Grupos sensíveis devem reduzir o esforço ao ar livre.'},
+    days:[
+      {d:'Hoje',d2:'21 out',cond:'clear',min:21,max:36,rain:0,risk:'Alto',riskLvl:'perigo'},
+      {d:'Sex',d2:'22 out',cond:'storm',min:20,max:29,rain:90,risk:'Médio',riskLvl:'atencao'},
+      {d:'Sáb',d2:'23 out',cond:'rain',min:19,max:26,rain:85,risk:'Médio',riskLvl:'atencao'},
+      {d:'Dom',d2:'24 out',cond:'cloud-sun',min:19,max:28,rain:40,risk:'Baixo',riskLvl:'ok'},
+      {d:'Seg',d2:'25 out',cond:'clear',min:20,max:31,rain:10,risk:'Médio',riskLvl:'atencao'},
+      {d:'Ter',d2:'26 out',cond:'cloud',min:19,max:27,rain:55,risk:'Médio',riskLvl:'atencao'},
+      {d:'Qua',d2:'27 out',cond:'partly',min:20,max:30,rain:25,risk:'Alto',riskLvl:'perigo'}
+    ]
+  },
+
+  rio_de_janeiro: {
+    id:'rio_de_janeiro', name:'Rio de Janeiro', region:'Rio de Janeiro · RJ', regionShort:'Sudeste',
+    temp:31, feels:35, humidity:71, wind:16, gust:29, precip:2.4, pressure:1011, uv:9,
+    cond:'partly', condLabel:'Parcialmente nublado', min:23, max:33, badge:'Umidade alta',
+    risk:{score:66,label:'Médio-alto',cap:'Calor úmido com risco de temporales e agravamento de sintomas respiratórios. Atenção àChecksum de calor e à umidade elevada.'},
+    alerts:[
+      {lvl:'perigo',icon:'thermometer',title:'Calor úmido',text:'Temperatura de 31°C com 71% de umidade, sensação térmica de 35°C, reduzindo a capacidade de o corpo se resfriar pela evaporação.',when:'Hoje, 12h às 16h',tip:'Prefira ambientes climatizados e beba água em temperatura ambiente — água gelada não “esfria” mais o corpo.'},
+      {lvl:'atencao',icon:'storm',title:'Trovoadas à tarde',text:'Formação de nuvens de desenvolvimento com risco de raios, rajadas fortes e chuva intensa no fim da tarde.',when:'Hoje, 16h às 20h',tip:'Evite áreas abertas durante trovoadas, não se abrigue sob árvores isoladas e desconecte aparelhos Sensitive da rede.'},
+      {lvl:'atencao',icon:'uv',title:'Radiação UV alta',text:'Índice UV 9, com queimação solar provável em exposures prolongadas sem proteção.',when:'Hoje, 10h às 16h',tip:'Protetor solar FPS 50+, chapéu e sombra. Reaplique o protetor a cada 2 horas.'},
+      {lvl:'atencao',icon:'droplet',title:'Umidade elevada',text:'Umidade acima de 70% favorece o desenvolvimento de mofo e ácaros em ambientes internos e.dpeningue a percepção de calor.',when:'Hoje, o dia todo',tip:'Ventile os cômodos nas horas mais frias, seque roupas dentro de casa e monitore recombustão em ambientes fechados.'},
+      {lvl:'atencao',icon:'wind',title:'Poluição do ar no nível laranja',text:'Material particulado fino e ozônio acima do limite recomendado pelo CONAMA, com efeito irritante nas vias aéreas.',when:'Hoje, 8h às 18h',tip:'Alergicos e asmáticos devem evitar Corollary exercícios ao ar livre em áreas de maior tráfego.'},
+      {lvl:'info',icon:'rain-drop',title:'Chuva de curta duração',text:'Pancadas isoladas com acúmulo de até 5 mm, com risco de alagamento em pontos de histórico do centro.',when:'Hoje, 17h às 19h',tip:'Leve guarda-chuva e evite dirigir por ruas com histórico de alagamento.'}
+    ],
+    health:[
+      {lvl:'perigo',icon:'fever',cat:'Termorregulação',title:'Golpe de calor em ambiente úmido',desc:'A umidade elevada impede a evaporação do suor, sobrecarregando o sistema de termorregulação mesmo em temperaturas moderadas.',groups:['Idosos','Crianças','Obesos','Doentes crônicos'],tip:'Mantenha ambientes frescos e ventilados, ingira líquidos e redimensione o esforço físico ao ar livre.'},
+      {lvl:'atencao',icon:'storm',cat:'Meteorológico',title:'Riscos de raios e ventos',desc:'Trovoadas concentradas no fim da tarde elevam o risco de descargas elétricas e quedas de ramos.',groups:['Todo público','Trabalhadores ao ar livre','Motoristas'],tip:'Ao ouvir trovão, procure abrigo em local fechado e evite o uso de objetos metálicos.'},
+      {lvl:'atencao',icon:'lung',cat:'Respiratório',title:'Crise de asma por ozônio e umidade',desc:'Ozônio elevado somado à alta umidade e mofo tendem a piorar broncoespasmo e rinite.',groups:['Asmáticos','Rinites','Crianças','Idosos'],tip:'Tenha o broncodilatador à mão, prefira ar-condicionado filtrado e evite espaços com mofo.'},
+      {lvl:'atencao',icon:'droplet',cat:'Alergia',title:'Proliferação de mofo e ácaros',desc:'A combinação de calor e umidade cria ambiente favorável ao mofo, que é um dos principais gatilhos de rinite e asma.',groups:['Alérgicos','Asmáticos','Crianças'],tip:'Reduza a umidade ambiente abaixo de 60%, limpe com produtos antifúngicos e use capas antiácaro.'},
+      {lvl:'atencao',icon:'skin',cat:'Dermatológico',title:'Queimadura solar e manchas',desc:' mesmo com nuvens, a radiação UV combinada com o suor favorece queimaduras e manchas na pele.',groups:['Crianças','Pessoas de pele clara','Em tratamento com fotossensíveis'],tip:'Protetor solar resistente à água, reaplicado a cada 2 horas.'},
+      {lvl:'info',icon:'leaf',cat:'Conforto e sono',title:'Noites quentes e mal dormidas',desc:'As noites mantidas acima de 25°C reduzem a qualidade do sono e aumentam a fadiga diurna, afetando mais idosos e Kuntz.',groups:['Idosos','Bebês','Pessoas com insônia'],tip:'Ventile à noite, use lençóis de algodão leve e considere umidificador Controlled de forma controlada.'}
+    ],
+    air:{pm25:24,pm10:41,o3:112,no2:39,aqi:78,label:'Moderado',advice:'Ozônio em alta. Prefira exercícios pela manhã e evite o ar livre no meio do dia.'},
+    days:[
+      {d:'Hoje',d2:'21 out',cond:'partly',min:23,max:33,rain:45,risk:'Alto',riskLvl:'perigo'},
+      {d:'Sex',d2:'22 out',cond:'storm',min:23,max:30,rain:80,risk:'Médio',riskLvl:'atencao'},
+      {d:'Sáb',d2:'23 out',cond:'rain',min:22,max:27,rain:70,risk:'Baixo',riskLvl:'ok'},
+      {d:'Dom',d2:'24 out',cond:'cloud',min:22,max:28,rain:45,risk:'Baixo',riskLvl:'ok'},
+      {d:'Seg',d2:'25 out',cond:'partly',min:23,max:31,rain:35,risk:'Médio',riskLvl:'atencao'},
+      {d:'Ter',d2:'26 out',cond:'clear',min:24,max:33,rain:15,risk:'Alto',riskLvl:'perigo'},
+      {d:'Qua',d2:'27 out',cond:'storm',min:23,max:29,rain:75,risk:'Médio',riskLvl:'atencao'}
+    ]
+  },
+
+  belo_horizonte: {
+    id:'belo_horizonte', name:'Belo Horizonte', region:'Minas Gerais · MG', regionShort:'Sudeste',
+    temp:29, feels:30, humidity:49, wind:9, gust:18, precip:0, pressure:1015, uv:8,
+    cond:'cloud-sun', condLabel:'Parcialmente nublado', min:19, max:31, badge:'Estável',
+    risk:{score:44,label:'Médio',cap:'CondiçõesGenerally estáveis, com atenção àamplitude térmica entre o dia e a noite e à qualidade do ar no período da manhã.'},
+    alerts:[
+      {lvl:'atencao',icon:'thermometer',title:'Amplitude térmica elevada',text:'Diferença de 12°C entre a mínima da manhã e a máxima da tarde, o que pode desregular o sono e desencadear dores.',when:'Hoje, 5h às 18h',tip:'Vista roupas em camadas e evite expor-se a mudanças bruscas de temperatura.'},
+      {lvl:'atencao',icon:'uv',title:'Radiação UV alta',text:'Índice UV 8 no período da manhã, com risco de queimadura solar em peles claras e sensíveis.',when:'Hoje, 9h às 16h',tip:'Protetor solar, chapéu e uso de áreas sombreadas entre o fim da manhã e o meio-dia.'},
+      {lvl:'atencao',icon:'wind',title:'Poluição do ar no início do dia',text:'A inversão térmica noturna retém poluentes, deixando o ar pior entre 6h e 9h, antes da circulação de ventos.',when:'Hoje, 6h às 9h',tip:'Adie o exercício matinal ou faça-o em ambientes internos com ar filtrado.'},
+      {lvl:'info',icon:'droplet',title:'Ar seco relativo',text:'Umidade de 49% com sensação de secura no nariz e na garganta, especialmente à noite.',when:'Hoje, 14h às 23h',tip:'Beba água e considere umidificador no quarto, sobretudo se usaulentar ressecar a voz.'},
+      {lvl:'info',icon:'cloud',title:'Neblina pela manhã',text:'Formação de neblina com visibilidade reduzida nas áreas mais baixas e vias de mão única.',when:'Amanhã, 5h às 8h',tip:'Reduza a velocidade, use farol baixo e evite ultrapassagens no trecho com neblina.'},
+      {lvl:'info',icon:'wind',title:'Vento fraco a moderado',text:'Ventos de até 20 km/h, com rajadas eventuais, sem risco relevante.',when:'Hoje, o dia todo',tip:'Apenas atenção a guarda-chuvas e objetos leves.'}
+    ],
+    health:[
+      {lvl:'atencao',icon:'thermometer',cat:'Termorregulação',title:'Choque térmico na mudança de horário',desc:'A diferença entre a temperatura da manhã e a da tarde exige que o corpo se adapte rapidamente, o que causa mal-estar e dor de cabeça em pessoas sensíveis.',groups:['Idosos','Crianças','Doentes crônicos'],tip:'Vista em camadas ehidrate-se com regularidade ao longo do dia.'},
+      {lvl:'atencao',icon:'lung',cat:'Respiratório',title:'Piora da qualidade do ar pela manhã',desc:'A inversão térmica concentra materiais particulados nos vales, irritando o sistema respiratório nas primeiras horas do dia.',groups:['Asmáticos','Rinites','Idosos','Cardiopatas'],tip:'Adie atividades físicas ao ar livre para depois das 9h e feche janelas em horários de pico.'},
+      {lvl:'atencao',icon:'skin',cat:'Dermatológico',title:'Queimadura solar por UV elevado',desc:'Mesmo com nebulosidade parcial, o índice UV chega a 8 e queima rapidamente a pele desprotegida.',groups:['Crianças','Pessoas de pele clara','Quem usa fotossensíveis'],tip:'Protetor solar FPS 50+ e chapéu; a nuvem não bloqueia toda a radiação UV.'},
+      {lvl:'info',icon:'fever',cat:'Termorregulação',title:'Desidratação leve',desc:'Embora a temperatura seja moderada, o ar seco e o sol aumentam a necessidade diária de água.',groups:['Atletas','Bebês','Idosos'],tip:'Beba água em pequenos intervalos, mesmo sem sede.'},
+      {lvl:'info',icon:'fog',cat:'Respiratório',title:'Irritação por neblina',desc:'A névoa condensa vapor de água e partículas em suspensão, reduzindo a visibilidade e irritando as vias aéreas.',groups:['Asmáticos','Motoristas','Pessoas com rinite'],tip:'Use máscara em trechos com neblina e mantenha o porta-luz dos carros limpo.'},
+      {lvl:'info',icon:'house',cat:'Conforto',title:'Noites frescas e úmida',desc:'A baixa temperatura noturna favorece a condensação e o mofo em paredes e armários.',groups:['Alérgicos','Asmáticos','Idosos'],tip:'Ventile as ambientes durante o dia e mantenha a umidade da casa entre 40% e 60%.'}
+    ],
+    air:{pm25:22,pm10:35,o3:64,no2:31,aqi:58,label:'Moderado',advice:'Ar adequado para a maioria; apenas os mais sensíveis devem moderar o esforço ao ar livre.'},
+    days:[
+      {d:'Hoje',d2:'21 out',cond:'cloud-sun',min:19,max:31,rain:20,risk:'Médio',riskLvl:'atencao'},
+      {d:'Sex',d2:'22 out',cond:'partly',min:18,max:32,rain:15,risk:'Alto',riskLvl:'atencao'},
+      {d:'Sáb',d2:'23 out',cond:'storm',min:19,max:28,rain:75,risk:'Médio',riskLvl:'atencao'},
+      {d:'Dom',d2:'24 out',cond:'cloud',min:18,max:27,rain:45,risk:'Baixo',riskLvl:'ok'},
+      {d:'Seg',d2:'25 out',cond:'clear',min:17,max:30,rain:5,risk:'Médio',riskLvl:'atencao'},
+      {d:'Ter',d2:'26 out',cond:'partly',min:18,max:31,rain:20,risk:'Médio',riskLvl:'atencao'},
+      {d:'Qua',d2:'27 out',cond:'cloud-sun',min:19,max:30,rain:30,risk:'Médio',riskLvl:'atencao'}
+    ]
+  },
+
+  curitiba: {
+    id:'curitiba', name:'Curitiba', region:'Paraná · PR', regionShort:'Sul',
+    temp:14, feels:12, humidity:78, wind:13, gust:24, precip:1.2, pressure:1019, uv:3,
+    cond:'fog', condLabel:'Neblina', min:9, max:18, badge:'Frio e neblina',
+    risk:{score:58,label:'Médio',cap:'Frio com neblina e umidade alta: risco de hipotermia em grupos vulneráveis e de piora de sintomas respiratórios.'},
+    alerts:[
+      {lvl:'perigo',icon:'thermometer',title:'Frio intenso com sensação térmica baixa',text:'Temperatura de 14°C com vento, fazendo a sensação cair para 12°C, e ainda mais durante a madrugada.',when:'Hoje, 20h às 6h',tip:'Vista em camadas, cubra as extremidades (cabeça, mãos e pés) e mantenha o ambiente aquecido.'},
+      {lvl:'atencao',icon:'fog',title:'Neblina densa e visibilidade reduzida',text:'Neblina com visibilidade inferior a 200 m em áreas baixas e no entorno de rios.',when:'Hoje, 5h às 9h',tip:'Reduza a velocidade, use faróis baixos e não pare no acostamento em trechos com neblina.'},
+      {lvl:'atencao',icon:'droplet',title:'Risco de hipotermia em idosos',text:'Perda de calor corporal acima de 28% do total em pessoas idosas, com risco de queda e confusão mental.',groups:['Idosos','Bebês','Pessoas com baixa imunidade'],tip:'Verifique a temperatura da casa durante a noite, use meias e mantenha o cuerpo aquecido.'},
+      {lvl:'atencao',icon:'lung',title:'Ar úmido e mofo',text:'Umidade de 78% mantida por várias horas favorece mofo, ácaros e intensificação da rinite.',when:'Hoje, o dia todo',tip:'Ventile os ambientes, use desumidificador e lave roupa em temperatura adequada.'},
+      {lvl:'info',icon:'rain-drop',title:'Chuvisco intermitente',text:'Chuva fraca e irregular, com piso escorregadio no período da manhã.',when:'Hoje, 7h às 11h',tip:'Atenção ao piso molhado e à visibilidade de pedestres e ciclistas.'},
+      {lvl:'info',icon:'uv',title:'Radiação UV baixa',text:'Índice UV 3 — índice baixo durante o dia, sem risco relevante de queimadura solar.',when:'Hoje, 10h às 15h',tip:'Proteção solar não é necessária na maioria dos casos, mas vale usar chapéu se passar o dia ao ar livre.'}
+    ],
+    health:[
+      {lvl:'perigo',icon:'thermometer',cat:'Termorregulação',title:'Hipotermia em idosos e lactentes',desc:'O frio com vento e umidade eleva a perda de calor corporal, podendo causar hipotermia, quedas e confusão em pessoas idosas.',groups:['Idosos','Bebês','Pessoas com problemas circulatórios','Moradores de rua'],tip:'Camadas de roupa, meias secas, cachecol e mantenha a temperatura ambiente acima de 18°C durante a noite.'},
+      {lvl:'atencao',icon:'lung',cat:'Respiratório',title:'Ataque de asma por ar frio e úmido',desc:'O ar frio e úmido irrita as vias aéreas, e o mofo liberado pela chuva é um gatilho clássico de broncoespasmo.',groups:['Asmáticos','Rinites','Bronquite crônica','Crianças'],tip:'Cubra a boca e o nariz com uma faixa de tecido ao sair do ambiente aquecido e mantenha o inalador disponível.'},
+      {lvl:'atencao',icon:'droplet',cat:'Alergia',title:'Mofo e ácaros do colchão',desc:'A umidade alta multiplica a umidade nas paredes e favorece o mofo e a multiplicação dos ácaros na roupa de cama.',groups:['Alérgicos','Asmáticos','Crianças'],tip:'Use capas antiácaro, seque a roupa de cama ao sol e mantenha a umidade entre 40% e 60%.'},
+      {lvl:'atencao',icon:'fog',cat:'Segurança',title:'Acidentes de trânsito por neblina',desc:'A visibilidade abaixo de 200 m aumenta o risco de colisão, especialmente em vias rápidas e estradas de serra.',groups:['Motoristas','Ciclistas','Pedestres'],tip:'Use faróis baixos e automáticos, reduza a velocidade e aumente a distância de segurança.'},
+      {lvl:'info',icon:'skin',cat:'Dermatológico',title:'Pele ressecada e fissuras',desc:'O ar frio e seco, ainda mais com aquecimento artificial, resseca a pele e causa fissuras nas mãos.',groups:['Crianças','Idosos','Profissionais de saúde'],tip:'Hidrate a pele com cremes umectantes após o banho e use luvas no frio.'},
+      {lvl:'info',icon:'house',cat:'Conforto',title:'Ambientes internos superaquecidos',desc:'Aquecedores usados de forma intensiva geram ar muito seco, que provoca irritação respiratória e ressecamento da mucosa.',groups:['Asmáticos','Idosos','Crianças'],tip:'Mantenha a umidade acima de 40% com umidificador e não aqueça o ambiente acima de 22°C.'}
+    ],
+    air:{pm25:14,pm10:22,o3:48,no2:19,aqi:34,label:'Boa',advice:'Qualidade do ar boa. Atividades ao ar livre liberadas sem restrições.'},
+    days:[
+      {d:'Hoje',d2:'21 out',cond:'fog',min:9,max:18,rain:40,risk:'Alto',riskLvl:'perigo'},
+      {d:'Sex',d2:'22 out',cond:'cloud',min:8,max:17,rain:55,risk:'Médio',riskLvl:'atencao'},
+      {d:'Sáb',d2:'23 out',cond:'rain',min:9,max:15,rain:85,risk:'Médio',riskLvl:'atencao'},
+      {d:'Dom',d2:'24 out',cond:'fog',min:8,max:16,rain:35,risk:'Alto',riskLvl:'atencao'},
+      {d:'Seg',d2:'25 out',cond:'cloud-sun',min:9,max:19,rain:20,risk:'Baixo',riskLvl:'ok'},
+      {d:'Ter',d2:'26 out',cond:'partly',min:10,max:21,rain:15,risk:'Baixo',riskLvl:'ok'},
+      {d:'Qua',d2:'27 out',cond:'cloud',min:11,max:20,rain:40,risk:'Baixo',riskLvl:'ok'}
+    ]
+  },
+
+  recife: {
+    id:'recife', name:'Recife', region:'Pernambuco · PE', regionShort:'Nordeste',
+    temp:30, feels:36, humidity:76, wind:19, gust:33, precip:5.6, pressure:1009, uv:10,
+    cond:'rain', condLabel:'Pancadas de chuva', min:24, max:31, badge:'Chuva e vento',
+    risk:{score:72,label:'Alto',cap:'Chuva intensa com vento forte e calor úmido. Atenção máxima a alagamentos, raios e queda de árvores.'},
+    alerts:[
+      {lvl:'perigo',icon:'rain-drop',title:'Chuva intensa com alagamento',text:'Acumulado de até 30 mm em poucas horas, com risco de alagamento de ruas e galerias de escoamento entupidas.',when:'Hoje, 14h às 19h',tip:'Não atravesse vias alagadas e acompanhe os alertas da Defesa Civil da cidade.'},
+      {lvl:'perigo',icon:'storm',title:'Trovoadas com raios',text:'Formação de tempestades com descargas elétricas, rajadas de até 60 km/h e granizo localizado.',when:'Hoje, 15h às 18h',tip:'Dentro de casa, evite o uso de objetos metálicos e desconecte equipments sensitive. Em área externa, não se abrigue sob árvores.'},
+      {lvl:'perigo',icon:'wind',title:'Vento forte com rajadas',text:'Rajadas entre 50 e 65 km/h, com risco de queda de árvores, postes ecravar de estruturas leves.',when:'Hoje, 13h às 20h',tip:'Proteja ventanas, recolha objetos de varanda e evite circular durante o pico da rajada.'},
+      {lvl:'atencao',icon:'thermometer',title:'Calor úmido antes da chuva',text:'Sensação térmica de 36°C antes da pancada, com 76% de umidade relativa do ar.',when:'Hoje, 11h às 15h',tip:'Hidrate-se bastante e espere o início da chuva dentro de ambiente arejado.'},
+      {lvl:'atencao',icon:'droplet',title:'Acúmulo de água e leptospirose',text:'Enchentes e galerias transbordando criam contato com água contaminada, elevando o risco de leptospirose.',groups:['Todo público','Profissionais de limpeza','Moradores de áreas baixas'],tip:'Evite o contato com enchentes e use botas e luvas. Procure atendimento em caso de febre após exposição.'},
+      {lvl:'info',icon:'mosquito',title:'Proliferação do Aedes após a chuva',text:'Poças formadas pela chuva aumentam os focos de Aedes aegypti, vetor da dengue e da chikungunya.',groups:['Todo público','Animais de estimação'],tip:'Esvazie vasos, caixas d’água e calhas pelo menos uma vez por semana.'}
+    ],
+    health:[
+      {lvl:'perigo',icon:'fever',cat:'Infeccioso',title:'Leptospirose e diarreias',desc:'Água de enchente carrega urina de rato eacteria, podendo causar febre, dores musculares e icterícia em quem tem contato direto.',groups:['Quem andar na chuva','Profissionais de limpeza','Moradores de áreas baixas'],tip:'Não pise em água acumulada; se houve contato, procure orientação médica observando o prazo de incubação.'},
+      {lvl:'perigo',icon:'fever',cat:'Termorregulação',title:'Insolação por calor úmido',desc:'Calor com 76% de umidade impede a evaporação do suor e provoca insolação, confusão e colapso em poucas horas de esforço.',groups:['Crianças','Idosos','Atletas','Trabalhadores de rua'],tip:'Pare o esforço ao primeiro sintoma, leve a pessoa para local fresco e hidrate com frequência.'},
+      {lvl:'perigo',icon:'storm',cat:'Segurança',title:'Raios e vento destrutivo',desc:'Descargas elétricas e rajadas de 60 km/h causamcarbon injuries, quedas de árvores e-coated damage em estruturas leves.',groups:['Todo público','Motoristas','Obras'],tip:'Acesse-Edifício com proteção, evite áreas abertas e, em caso de queda de árvore, isole o local.'},
+      {lvl:'atencao',icon:'mosquito',cat:'Infeccioso',title:'Dengue e chikungunya',desc:'Temperatura entre 24°C e 31°C com chuva e umidade cria o cenário ideal para a reprodução do mosquito.',groups:['Crianças','Gestantes','Idosos','Imunossuprimidos'],tip:'Elimine água parada e use repelente também nas janelas e nos mosquiteiros.'},
+      {lvl:'atencao',icon:'lung',cat:'Respiratório',title:'Asma e rinite por tempo úmido',desc:'A umidade alta e a chuva liberam pólen e intensificam a presença de fungos, gatilhos frequentes de broncoespasmo.',groups:['Asmáticos','Rinites','Alérgicos'],tip:'Tenha o inalador à mão e prefira ambientes com ar filtrado após a tempestade.'},
+      {lvl:'info',icon:'walking',cat:'Segurança',title:'Acidentes em vias alagadas',desc:'Água acumulada esconde buracos e aumenta o risco de acidentes com pedestres e veículos nas áreas baixas.',groups:['Pedestres','Motoristas','Ciclistas'],tip:'Desvie das áreas alagadas e respeite a sinalização da Defesa Civil.'}
+    ],
+    air:{pm25:16,pm10:29,o3:52,no2:22,aqi:38,label:'Boa',advice:'Ar limpo. A chuva ajuda a dispersar os poluentes.'},
+    days:[
+      {d:'Hoje',d2:'21 out',cond:'rain',min:24,max:31,rain:85,risk:'Alto',riskLvl:'perigo'},
+      {d:'Sex',d2:'22 out',cond:'storm',min:24,max:30,rain:90,risk:'Alto',riskLvl:'perigo'},
+      {d:'Sáb',d2:'23 out',cond:'rain',min:24,max:30,rain:75,risk:'Alto',riskLvl:'atencao'},
+      {d:'Dom',d2:'24 out',cond:'cloud-sun',min:24,max:32,rain:45,risk:'Médio',riskLvl:'atencao'},
+      {d:'Seg',d2:'25 out',cond:'partly',min:25,max:32,rain:35,risk:'Médio',riskLvl:'atencao'},
+      {d:'Ter',d2:'26 out',cond:'storm',min:24,max:30,rain:80,risk:'Alto',riskLvl:'perigo'},
+      {d:'Qua',d2:'27 out',cond:'cloud',min:24,max:31,rain:50,risk:'Médio',riskLvl:'atencao'}
+    ]
+  },
+
+  manaus: {
+    id:'manaus', name:'Manaus', region:'Amazonas · AM', regionShort:'Norte',
+    temp:33, feels:38, humidity:79, wind:6, gust:14, precip:3.8, pressure:1006, uv:9,
+    cond:'storm', condLabel:'Trovoadas', min:25, max:34, badge:'Calor e tempestades',
+    risk:{score:83,label:'Muito alto',cap:'Calor extremo com umidade altíssima, tempestades com raios e risco de alagamentos. Nivel de cuidado máximo.'},
+    alerts:[
+      {lvl:'perigo',icon:'thermometer',title:'Calor extremo com sensação de 38°C',text:'Temperatura de 33°C e umidade de 79%, que impede a perda de calor e gera choque térmico com esforço.',when:'Hoje, 11h às 17h',tip:'Limite a exposição ao sol, beba água com frequência e nunca deixe crianças ou animais em veículos parados.'},
+      {lvl:'perigo',icon:'storm',title:'Tempestades com raios',text:'Trovoadas intensas à tarde com descargas elétricas, rajadas superiores a 50 km/h e chuva de até 40 mm.',when:'Hoje, 15h às 19h',tip:'Procure um edifício com proteção contra raios e evite toca de trees; o risco de raio é o maior perigo da tempestade.'},
+      {lvl:'perigo',icon:'rain-drop',title:'Alagamento urbano',text:'Chuva intensa sobre solo já saturado, com transbordo de córregos e de galerias de escoamento.',when:'Hoje, 16h às 21h',tip:'Desvie de áreas alagadas, não atravesse a correnteza e acompanhe os avisos da Defesa Civil.'},
+      {lvl:'atencao',icon:'uv',title:'Radiação UV alta',text:'Índice UV 9 mesmo sob nuvens carregadas de chuva, com risco de queimadura solar.',when:'Hoje, 10h às 16h',tip:'Protetor solar FPS 50+ e chapéu mesmo em dias nublados de chuva.'},
+      {lvl:'atencao',icon:'droplet',title:'Pressão atmosférica muito baixa',text:'1006 hPa, associada a sistemas de baixa pressão e à intensificação da instabilidade atmosférica.',when:'Hoje, o dia todo',tip:'A baixa pressão pode agravar dores articulares e enxaquecas;hidrate-se e descanse.'},
+      {lvl:'atencao',icon:'fever',cat:'',title:'Aumento de doenças tropicais',text:'Calor, umidade e água parada favorecem a multiplicação do Aedes aegypti e a circulação de dengue e chikungunya.',groups:['Crianças','Gestantes','Idosos'],tip:'Verifique o mosquito em sua casa uma vez por semana e use repelente com DEET ou icaridina.'}
+    ],
+    health:[
+      {lvl:'perigo',icon:'fever',cat:'Termorregulação',title:'Insolação e desidratação severa',desc:'O calor de 33°C somado a 79% de umidade torna quase impossível a perda de calor pelo suor, causando colapso em exertions prolongadas.',groups:['Crianças','Idosos','Atletas','Obras','Animais de estimação'],tip:'Interrompa o esforço aos primeiros sinais, reidrate com soro ou água e confirme a temperatura da pele.'},
+      {lvl:'perigo',icon:'storm',cat:'Segurança',title:'Descargas elétricas (raios)',desc:'Raios são a principal causa de morte em tempestades tropicais, atingindo pessoas em áreas abertas e sob árvores solitárias.',groups:['Todo público','Operadores de rede','Agricultores'],tip:'Em tempestade, o interior de um veículo ou de um edifício com proteção é o refúgio mais seguro.'},
+      {lvl:'perigo',icon:'mosquito',cat:'Infeccioso',title:'Dengue, chikungunya e Zika',desc:'Temperatura de 25°C a 34°C com umidade alta e chuva é a combinação ideal para o ciclo de vida do mosquito da dengue.',groups:['Gestantes','Crianças','Idosos','Imunossuprimidos'],tip:'Não deixe água parada em vasos, pneus e caixas d’água; use telas nas janelas.'},
+      {lvl:'atencao',icon:'droplet',cat:'Respiratório',title:'Asma e bronquite com tempo úmido',desc:'A umidade elevada e a presença de fungos após a chuva intensificam crises respiratórias e rinite.',groups:['Asmáticos','Rinites','Crianças','Idosos'],tip:'Mantenha o inalador de resgate à mão e prefira ar-condicionado com filtro limpo.'},
+      {lvl:'atencao',icon:'skin',cat:'Dermatológico',title:'Queimadura solar e fungos na pele',desc:'O suor constante em clima quente e úmido favorece tanto a queimadura solar quanto o crescimento de fungos na pele.',groups:['Crianças','Atletas','Quem usa_uniformes fechadas'],tip:'Troque de roupa, seque bem as dobras e use protetor solar mesmo em dias de chuva.'},
+      {lvl:'atencao',icon:'house',cat:'Conforto',title:'Dormir com calor e umidade',desc:'Noites acima de 26°C com 79% de umidade reduzem a qualidade do sono e aumentam a fadiga crônica.',groups:['Idosos','Bebês','Turno noturno'],tip:'Ventile antes de dormir, use colchão e roupas leves e considere um ventilador de teto.'}
+    ],
+    air:{pm25:19,pm10:33,o3:57,no2:24,aqi:42,label:'Boa',advice:'Ar limpo na maior parte do dia; a chuva dispersa os poluentes.'},
+    days:[
+      {d:'Hoje',d2:'21 out',cond:'storm',min:25,max:34,rain:80,risk:'Muito alto',riskLvl:'perigo'},
+      {d:'Sex',d2:'22 out',cond:'storm',min:25,max:33,rain:85,risk:'Muito alto',riskLvl:'perigo'},
+      {d:'Sáb',d2:'23 out',cond:'rain',min:25,max:32,rain:75,risk:'Alto',riskLvl:'perigo'},
+      {d:'Dom',d2:'24 out',cond:'cloud-sun',min:25,max:34,rain:50,risk:'Alto',riskLvl:'atencao'},
+      {d:'Seg',d2:'25 out',cond:'storm',min:24,max:32,rain:75,risk:'Alto',riskLvl:'perigo'},
+      {d:'Ter',d2:'26 out',cond:'rain',min:25,max:32,rain:70,risk:'Alto',riskLvl:'atencao'},
+      {d:'Qua',d2:'27 out',cond:'partly',min:25,max:33,rain:45,risk:'Alto',riskLvl:'atencao'}
+    ]
+  }
+};
+
+const LEVEL_LABEL = {perigo:'Perigo', severo:'Severo', atencao:'Atenção', info:'Informativo', ok:'Baixo'};
+/* Referências a variáveis CSS: as cores se adaptam ao tema claro/escuro. */
+const LEVEL_VAR = {
+  perigo:'var(--lvl-perigo)', severo:'var(--lvl-severo)',
+  atencao:'var(--lvl-atencao)', info:'var(--lvl-info)', ok:'var(--lvl-ok)'
+};
+const CITY_LIST = Object.values(cities);
+
+/* ---------- Bloco 3: helpers ---------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const nf = new Intl.NumberFormat('pt-BR');
+const pad = n => String(n).padStart(2,'0');
+const rnd = seed => { const x = Math.sin(seed)*10000; return x - Math.floor(x); };
+
+const WEEKDAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+function fmtDate(d){ return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} de ${MONTHS[d.getMonth()]}`; }
+function fmtHour(d){ return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function riskColor(score){ return score>=75?LEVEL_VAR.perigo : score>=50?LEVEL_VAR.atencao : score>=30?LEVEL_VAR.info : LEVEL_VAR.ok; }
+
+/* Série horária determinística: curva em cosseno com pico às 15h. */
+function buildHourly(c, idx){
+  const mid=(c.max+c.min)/2, amp=(c.max-c.min)/2, out=[];
+  for(let i=0;i<24;i++){
+    const h=(15+i)%24;
+    const temp = mid + amp*Math.cos((2*Math.PI*(h-15))/24);
+    const base = c.days[0].rain;
+    const wave = base * (0.35 + 0.65*Math.abs(Math.cos((2*Math.PI*(h-16))/24)));
+    const rain = Math.max(0, Math.min(100, Math.round(wave*(0.75+0.5*rnd(idx*31+h)))));
+    const cond = rain>55?'storm' : rain>25?'rain' : (h>=6&&h<18 ? (c.cond==='clear'?'clear':'cloud-sun') : 'cloud');
+    out.push({h, temp:Math.round(temp), rain, cond});
+  }
+  return out;
+}
+
+/* ---------- Bloco 4: renderização ---------- */
+let current = 'santiago';
+
+function render(){
+  const c = cities[current];
+  const idx = CITY_LIST.findIndex(x=>x.id===current);
+  const now = new Date();
+  const setText = (id,v)=>{ const el=$('#'+id); if(el) el.textContent=v; };
+
+  /* Hero */
+  setText('placeName', c.name);
+  setText('placeRegion', c.region);
+  setText('placeDate', fmtDate(now));
+  setText('placeTime', fmtHour(now));
+  setText('heroBadge', c.badge);
+  $('#nowIcon').innerHTML = ic(c.cond);
+  $('#nowTemp').textContent = c.temp + '°';
+  setText('nowCond', c.condLabel);
+  setText('nowFeels', `Sensação térmica de ${c.feels}°C`);
+  $('#placePin').innerHTML = icPath('pin');
+
+  /* Métricas */
+  const metrics = [
+    {i:'thermometer',l:'Sensação',v:c.feels+'°C',s:'temperatura percebida'},
+    {i:'droplet',l:'Umidade',v:c.humidity+'%',s:'relativa do ar'},
+    {i:'wind',l:'Vento',v:c.wind+' km/h',s:`rajadas de ${c.gust} km/h`},
+    {i:'rain-drop',l:'Precipitação',v:c.precip+' mm',s:'última hora'},
+    {i:'uv',l:'Índice UV',v:c.uv, s: c.uv>=11?'extremo':c.uv>=8?'muito alto':c.uv>=6?'alto':c.uv>=3?'moderado':'baixo'},
+    {i:'gauge',l:'Pressão',v:c.pressure+' hPa',s:c.pressure<=1008?'muito baixa':c.pressure<=1012?'baixa':'normal'}
+  ];
+  $('#metrics').innerHTML = metrics.map(m=>`
+    <div class="metric">
+      <span class="m-top">${ic(m.i)}${m.l}</span>
+      <span class="m-val">${m.v}</span>
+      <span class="m-sub">${m.s}</span>
+    </div>`).join('');
+
+  /* Gauge */
+  const C = 439.8, score = c.risk.score;
+  const arc = $('#gaugeArc');
+  arc.style.strokeDashoffset = C;
+  arc.style.stroke = riskColor(score);
+  setTimeout(()=>{ arc.style.strokeDashoffset = C*(1-score/100); }, 120);
+  setText('gaugeScore', score);
+  setText('gaugeLabel', c.risk.label);
+  $('#gaugeLabel').style.color = riskColor(score);
+  setText('gaugeCap', c.risk.cap);
+
+  const chips = [
+    {l:'Calor', v:c.feels>=35?'Extremo':c.feels>=30?'Alto':'Moderado'},
+    {l:'UV', v:c.uv>=11?'Extremo':c.uv>=8?'Muito alto':c.uv>=6?'Alto':'Baixo'},
+    {l:'Umidade', v:c.humidity>=75?'Alta':c.humidity<=45?'Baixa':'Normal'},
+    {l:'Vento', v:c.gust>=50?'Forte':c.gust>=30?'Moderado':'Fraco'}
+  ];
+  $('#gaugeChips').innerHTML = chips.map(k=>`<span class="chip">${k.l}: <b style="color:var(--text)">${k.v}</b></span>`).join('');
+
+  /* Destaques */
+  $('#highlights').innerHTML = c.alerts.slice(0,3).map(a=>`
+    <div class="highlight">
+      <span class="ic" style="color:${LEVEL_VAR[a.lvl]}">${icPath(a.icon)}</span>
+      <span><b>${a.title}.</b> ${a.when}.</span>
+    </div>`).join('');
+
+  /* Alertas */
+  setText('alertCount', `${c.alerts.length} alertas ativos`);
+  $('#alertList').innerHTML = c.alerts.map((a,i)=>`
+    <article class="alert" style="--lvl:${LEVEL_VAR[a.lvl]}" data-i="${i}">
+      <div class="alert-ico">${ic(a.icon)}</div>
+      <div class="alert-body">
+        <div class="alert-top">
+          <h3 class="alert-title">${a.title}</h3>
+          <span class="lvl-tag">${LEVEL_LABEL[a.lvl]}</span>
+        </div>
+        <p class="alert-text">${a.text}</p>
+        <p class="alert-when">${ic('clock')}${a.when}</p>
+        <div class="alert-extra"><div class="tip"><span class="ic">${icPath('bulb')}</span><span><b>O que fazer:</b> ${a.tip}</span></div></div>
+      </div>
+      <button class="alert-toggle" aria-label="Ver recomendação">${ic('chevron')}</button>
+    </article>`).join('');
+
+  /* Saúde */
+  setText('healthCount', `${c.health.length} riscos identificados`);
+  $('#healthGrid').innerHTML = c.health.map(h=>`
+    <article class="health" style="--lvl:${LEVEL_VAR[h.lvl]}">
+      <div class="health-top">
+        <div class="health-ico">${ic(h.icon)}</div>
+        <div>
+          <div class="health-cat">${h.cat||'Saúde'}</div>
+          <h3>${h.title}</h3>
+        </div>
+      </div>
+      <p class="health-desc">${h.desc}</p>
+      <div class="groups">${(h.groups||[]).map(g=>`<span class="${['Idosos','Crianças','Gestantes','Bebês','Idosos'].includes(g)?'hot':''}">${g}</span>`).join('')}</div>
+      <div class="health-tip"><span class="ic">${icPath('bulb')}</span><span>${h.tip}</span></div>
+    </article>`).join('');
+
+  /* Horário */
+  const hourly = buildHourly(c, idx);
+  $('#hourly').innerHTML = hourly.map((h,i)=>`
+    <div class="hour ${i===0?'now-hour':''}">
+      <span class="hour-h">${i===0?'Agora':pad(h.h)+'h'}</span>
+      <span class="hour-ic">${ic(h.cond)}</span>
+      <span class="hour-t">${h.temp}°</span>
+      <span class="hour-p">${ic('rain-drop')}${h.rain}%</span>
+    </div>`).join('');
+
+  /* Ar */
+  const air = c.air;
+  const poll = [
+    {n:'PM2.5', v:air.pm25, max:75, u:'µg/m³'},
+    {n:'PM10',  v:air.pm10, max:150,u:'µg/m³'},
+    {n:'O₃',    v:air.o3,  max:180,u:'µg/m³'},
+    {n:'NO₂',   v:air.no2, max:120,u:'µg/m³'}
+  ];
+  $('#airGrid').innerHTML = `
+    <div class="aqi-head">
+      <div>
+        <div style="font-size:26px;font-weight:800;font-family:Sora,sans-serif">${air.aqi} <span style="font-size:14px;color:var(--muted);font-weight:600">AQI</span></div>
+        <div style="font-size:13px;color:var(--muted)">Qualidade: <b style="color:${riskColor(air.aqi>60?60:air.aqi>40?45:25)}">${air.label}</b></div>
+      </div>
+      <span class="chip" style="border-color:${riskColor(air.aqi>60?60:air.aqi>40?45:25)};color:${riskColor(air.aqi>60?60:air.aqi>40?45:25)}">${ic('leaf')}${air.label}</span>
+    </div>
+    ${poll.map(p=>`
+      <div class="pollutant">
+        <span class="poll-name">${p.n}</span>
+        <div class="poll-track"><div class="poll-fill" data-w="${Math.min(100,Math.round(p.v/p.max*100))}" style="background:${riskColor(p.v/p.max>0.66?60:p.v/p.max>0.33?45:25)}"></div></div>
+        <span class="poll-val">${p.v} ${p.u}</span>
+      </div>`).join('')}
+    <div class="aqi-scale">
+      <i style="background:#34d399"></i><i style="background:#fbbf24"></i><i style="background:#fb923c"></i><i style="background:#f87171"></i><i style="background:#c084fc"></i>
+    </div>
+    <div class="aqi-legend"><span>Boa</span><span>Moderada</span><span>Insalubre</span><span>Muito insalubre</span><span>Perigosa</span></div>
+    <p style="font-size:12.5px;color:var(--muted)">${air.advice}</p>`;
+
+  /* 7 dias */
+  const allMin = Math.min(...c.days.map(d=>d.min)), allMax = Math.max(...c.days.map(d=>d.max));
+  const range = Math.max(1, allMax-allMin);
+  $('#week').innerHTML = c.days.map((d,i)=>`
+    <div class="week-row ${i===0?'today':''}">
+      <span class="week-day">${d.d}<small>${d.d2}</small></span>
+      <span class="week-ic">${ic(d.cond)}</span>
+      <div class="week-bar">
+        <span style="left:${((d.min-allMin)/range*100).toFixed(1)}%;width:${Math.max(8,(d.max-d.min)/range*100).toFixed(1)}%"></span>
+      </div>
+      <span class="week-temps"><small>${d.min}°</small><b>${d.max}°</b></span>
+      <span class="week-rain">${ic('rain-drop')}${d.rain}%</span>
+      <span class="risk-badge" style="--lvl:${LEVEL_VAR[d.riskLvl]}">${d.risk}</span>
+    </div>`).join('');
+
+  /* marca a cidade atual no histórico */
+  try{ localStorage.setItem('pet-clima-cidade', current); }catch(e){}
+}
+
+/* ---------- Bloco 5: interação ---------- */
+/* Ícones estáticos do HTML (header, nav, footer) */
+$$('[data-ic]').forEach(el=>{ el.innerHTML = icPath(el.dataset.ic); });
+$('#searchIcon').innerHTML = icPath('search');
+$('#geoBtn').innerHTML = icPath('pin');
+$('#themeBtn').innerHTML = icPath('palette');
+
+/* Tema */
+const applyTheme = t => {
+  document.documentElement.dataset.theme = t;
+  $('#themeBtn').classList.toggle('on', t==='light');
+  try{ localStorage.setItem('pet-clima-tema', t); }catch(e){}
+};
+let theme = 'dark';
+try{ theme = localStorage.getItem('pet-clima-tema') || (matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'); }catch(e){}
+applyTheme(theme);
+$('#themeBtn').addEventListener('click', ()=>{
+  theme = theme==='dark'?'light':'dark';
+  applyTheme(theme);
+  toast(theme==='dark'?'Tema escuro ativado':'Tema claro ativado');
+});
+
+/* Toast */
+let toastTimer;
+function toast(msg){
+  $('#toastText').textContent = msg;
+  $('#toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>$('#toast').classList.remove('show'), 2600);
+}
+
+/* Busca de cidade */
+const input = $('#cityInput'), results = $('#searchResults');
+function renderResults(q=''){
+  const list = CITY_LIST.filter(c => (c.name+' '+c.region).toLowerCase().includes(q.toLowerCase()));
+  results.innerHTML = list.map(c=>`<li role="option" data-id="${c.id}">${ic('pin')}<span>${c.name}</span><small>${c.regionShort} · ${c.temp}°C</small></li>`).join('')
+    || `<li style="color:var(--muted);cursor:default">Nenhuma cidade encontrada</li>`;
+  results.classList.toggle('open', list.length>0);
+  input.setAttribute('aria-expanded', list.length>0);
+}
+input.addEventListener('focus', ()=>renderResults(input.value));
+input.addEventListener('input', ()=>renderResults(input.value));
+input.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ results.classList.remove('open'); input.blur(); }
+  if(e.key==='Enter'){ const first=$('li[data-id]', results); if(first) selectCity(first.dataset.id); }
+});
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.search')){ results.classList.remove('open'); input.setAttribute('aria-expanded','false'); }
+  const li = e.target.closest('li[data-id]');
+  if(li) selectCity(li.dataset.id);
+});
+function selectCity(id){
+  if(!cities[id]) return;
+  current = id;
+  input.value = '';
+  results.classList.remove('open');
+  render();
+  toast(`Painel atualizado para ${cities[id].name}`);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* Localização (demonstrativa) */
+$('#geoBtn').addEventListener('click', ()=>{
+  toast('Localização real será integrada na versão com API.');
+});
+
+/* Acordeão dos alertas */
+$('#alertList').addEventListener('click', e=>{
+  const item = e.target.closest('.alert');
+  if(!item) return;
+  const extra = $('.alert-extra', item);
+  const open = item.classList.toggle('open');
+  extra.style.maxHeight = open ? (extra.scrollHeight || 400) + 'px' : '0px';
+});
+
+/* Nav ativa por scroll */
+const navLinks = $$('[data-nav]');
+const sections = navLinks.map(a=>$(a.getAttribute('href'))).filter(Boolean);
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      navLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+en.target.id));
+    }
+  });
+},{rootMargin:'-45% 0px -50% 0px'});
+sections.forEach(s=>obs.observe(s));
+
+/* Barras de poluentes animadas */
+const fillObs = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){ en.target.style.width = en.target.dataset.w+'%'; fillObs.unobserve(en.target); }
+  });
+},{threshold:.4});
+
+/* Inicialização */
+try{ const saved = localStorage.getItem('pet-clima-cidade'); if(saved && cities[saved]) current = saved; }catch(e){}
+render();
+setTimeout(()=>$$('.poll-fill').forEach(el=>fillObs.observe(el)), 300);
+</script>
+</body>
+</html>
