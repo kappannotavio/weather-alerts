@@ -4,10 +4,10 @@
  * localidade (preferências) -> clima (API/cache) -> classificação de
  * risco -> alerta automático -> alertas vigentes -> recomendações ->
  * notificação. Também trata busca de cidade, localidades recentes,
- * troca de público-alvo e notificações.
- * Importa: serviços (via container), HomeView, APP_CONFIG, TARGET_GROUPS e AppError.
+ * troca de público-alvo, notificações e tema claro/escuro.
+ * Importa: serviços (via container), HomeView, APP_CONFIG, TARGET_GROUPS, THEMES e AppError.
  */
-import { APP_CONFIG, TARGET_GROUPS } from '../config/constants.js';
+import { APP_CONFIG, TARGET_GROUPS, THEMES } from '../config/constants.js';
 import { AppError } from '../utils/errors.js';
 
 export class HomeController {
@@ -25,6 +25,9 @@ export class HomeController {
 
   /** Inicializa a página: liga eventos, carrega dados e agenda atualização. */
   async init() {
+    // Tema salvo é aplicado antes de tudo, para a página não piscar no tema errado
+    this.view.applyTheme(this.services.preferencesService.getPreferences().theme);
+    this.view.onToggleTheme(() => this.toggleTheme());
     this.view.onCitySearch((query) => this.searchCity(query));
     this.view.onUseMyLocation(() => this.useMyLocation());
     this.view.onRefresh(() => this.refresh({ forceRefresh: true }));
@@ -120,12 +123,26 @@ export class HomeController {
     const { notificationService, preferencesService } = this.services;
     try {
       if (enabled && !(await notificationService.requestPermission())) {
-        this.#renderNotificationState();
+        this.#renderNotificationState({ announce: true });
         return;
       }
       preferencesService.setNotifications(enabled);
-      this.#renderNotificationState();
+      this.#renderNotificationState({ announce: true });
       if (enabled) await this.refresh();
+    } catch (error) {
+      this.#handleError(error);
+    }
+  }
+
+  /**
+   * Caso de uso "Alternar tema": troca entre claro e escuro a partir do
+   * tema exibido agora (salvo ou do sistema) e grava a escolha.
+   */
+  toggleTheme() {
+    try {
+      const next = this.view.getActiveTheme() === THEMES.DARK ? THEMES.LIGHT : THEMES.DARK;
+      this.services.preferencesService.setTheme(next);
+      this.view.applyTheme(next);
     } catch (error) {
       this.#handleError(error);
     }
@@ -138,11 +155,12 @@ export class HomeController {
     this.view.renderRecommendations(recommendations);
   }
 
-  #renderNotificationState() {
+  /** announce: mostra o aviso flutuante (só quando o usuário clica no botão). */
+  #renderNotificationState({ announce = false } = {}) {
     const { notificationService, preferencesService } = this.services;
     const permission = notificationService.getPermission();
     const enabled = preferencesService.getPreferences().notificationsEnabled && permission === 'granted';
-    this.view.renderNotificationState(enabled, permission);
+    this.view.renderNotificationState(enabled, permission, { announce });
   }
 
   /** Mostra erros previstos com a mensagem do serviço; os demais, de forma genérica. */

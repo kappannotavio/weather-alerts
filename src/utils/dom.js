@@ -36,18 +36,3 @@ export function h(tag, props = {}, ...children) {
 export function replaceChildren(element, ...children) {
   element.replaceChildren(...children.flat().filter(Boolean));
 }
-
-/**
- * Escolhe texto claro ou escuro para ter contraste sobre a cor de fundo
- * (luminância relativa da WCAG). Necessário porque a cor do nível de
- * risco vem do catálogo e pode ser alterada no código sem revisar o texto.
- * @param {string} hexColor - cor no formato #RRGGBB
- */
-export function readableTextColor(hexColor) {
-  const channels = [1, 3, 5].map((start) => parseInt(hexColor.slice(start, start + 2), 16) / 255)
-    .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
-  const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-  const contrastWithWhite = 1.05 / (luminance + 0.05);
-  const contrastWithInk = (luminance + 0.05) / 0.0661; // tinta #16242C (luminância 0,0161 + 0,05)
-  return contrastWithWhite >= contrastWithInk ? '#FFFFFF' : '#16242C';
-}

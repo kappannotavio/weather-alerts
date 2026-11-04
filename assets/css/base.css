@@ -1,74 +1,152 @@
 /*
  * base.css
- * Tokens de design e componentes básicos da página (index.html).
- * Fontes: Barlow Condensed (títulos, lembra sinalização de Defesa Civil)
- * e Atkinson Hyperlegible (texto, criada para leitores com baixa visão).
+ * Tokens de design (tema claro e escuro), reset e componentes básicos
+ * da página (index.html). Visual baseado no painel da branch master:
+ * fundo com gradientes, cartões translúcidos, fontes Inter e Sora.
+ *
+ * Tema: sem escolha salva, segue o sistema (prefers-color-scheme).
+ * Com escolha salva, o HomeView grava data-theme="light|dark" no <html>.
  */
+
+/* ---------- 1. Tokens: tema claro (padrão) ---------- */
 :root {
-  --ink: #16242C;
-  --ink-soft: #46565C;
-  --paper: #F6F8F7;
-  --surface: #FFFFFF;
-  --line: #D3DCD9;
-  --focus: #1D5FD1;
-  --danger: #A82822;
-  --risk-normal: #1E7A4C;
+  --bg: #eef2fb;
+  --bg-2: #e3e9f8;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-2: rgba(255, 255, 255, 0.92);
+  --surface-3: rgba(15, 23, 42, 0.06);
+  --border: rgba(15, 23, 42, 0.12);
+  --border-soft: rgba(15, 23, 42, 0.07);
+  --text: #0f172a;
+  --text-2: #334155;
+  --muted: #56627a;
+  --brand: #3b6fd8;
+  --brand-2: #6d4fe0;
+  --danger: #b42318;
+  --glow-1: rgba(79, 140, 255, 0.22);
+  --glow-2: rgba(124, 92, 255, 0.16);
+  --glow-3: rgba(251, 146, 60, 0.14);
+  --shadow: 0 24px 50px -28px rgba(15, 23, 42, 0.42);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  /*
+   * Cores dos níveis vêm do catálogo (riskLevels.js) e são "cores de
+   * fundo". Para usá-las como texto, misturamos com preto (tema claro)
+   * ou branco (tema escuro) até ter contraste com o fundo.
+   */
+  --lvl-mix-base: #000;
+  --lvl-mix-amount: 62%;
+  /* Para preenchimentos (arco, barras, pontos): cor pura no claro, clareada no escuro */
+  --lvl-fill-amount: 100%;
 
-  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  --font-body: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Sora', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-  /* Escala tipográfica (razão ~1,25) */
-  --text-sm: 0.875rem;
-  --text-base: 1.0625rem;
-  --text-lg: 1.25rem;
-  --text-xl: 1.6rem;
-  --text-2xl: 2.25rem;
+  --r-lg: 22px;
+  --r-md: 16px;
+  --r-sm: 11px;
+  --max-width: 1280px;
 
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-12: 3rem;
-
-  --radius-sm: 4px;
-  --radius-md: 10px;
-  --max-width: 72rem;
+  color-scheme: light;
 }
 
+/* ---------- 2. Tokens: tema escuro ---------- */
+/* Mesmos valores em dois seletores: tema do sistema (sem escolha salva) e escolha salva */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #080c18;
+    --bg-2: #0d1428;
+    --surface: rgba(255, 255, 255, 0.045);
+    --surface-2: rgba(255, 255, 255, 0.075);
+    --surface-3: rgba(255, 255, 255, 0.11);
+    --border: rgba(255, 255, 255, 0.10);
+    --border-soft: rgba(255, 255, 255, 0.06);
+    --text: #e9edf8;
+    --text-2: #c3cbdf;
+    --muted: #8d97b5;
+    --brand: #4f8cff;
+    --brand-2: #7c5cff;
+    --danger: #f87171;
+    --glow-1: rgba(79, 140, 255, 0.30);
+    --glow-2: rgba(124, 92, 255, 0.22);
+    --glow-3: rgba(251, 146, 60, 0.16);
+    --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+    --lvl-mix-base: #fff;
+    --lvl-mix-amount: 70%;
+    --lvl-fill-amount: 82%;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #080c18;
+  --bg-2: #0d1428;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.075);
+  --surface-3: rgba(255, 255, 255, 0.11);
+  --border: rgba(255, 255, 255, 0.10);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --text: #e9edf8;
+  --text-2: #c3cbdf;
+  --muted: #8d97b5;
+  --brand: #4f8cff;
+  --brand-2: #7c5cff;
+  --danger: #f87171;
+  --glow-1: rgba(79, 140, 255, 0.30);
+  --glow-2: rgba(124, 92, 255, 0.22);
+  --glow-3: rgba(251, 146, 60, 0.16);
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --lvl-mix-base: #fff;
+  --lvl-mix-amount: 70%;
+  --lvl-fill-amount: 82%;
+  color-scheme: dark;
+}
+
+/* ---------- 3. Reset e base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 
 /* Garante que o atributo hidden vença regras de display dos componentes */
 [hidden] { display: none !important; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 130px; }
 
+/*
+ * Fundo decorativo (gradientes, como na master) direto no body: rola junto
+ * com o conteúdo e é desenhado uma vez. Um fundo fixo (position: fixed) com
+ * textura obrigava o navegador a recompor a tela inteira a cada quadro da rolagem.
+ */
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 620px at 12% -8%, var(--glow-1), transparent 62%),
+    radial-gradient(900px 560px at 92% 0, var(--glow-2), transparent 60%),
+    radial-gradient(820px 520px at 60% 100%, var(--glow-3), transparent 62%),
+    linear-gradient(180deg, var(--bg), var(--bg-2));
+  background-color: var(--bg);
+  color: var(--text);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: 15px;
   line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-h1, h2, h3 {
-  font-family: var(--font-display);
-  font-weight: 800;
-  line-height: 1.05;
-  margin: 0;
-}
-
-h2 { font-size: var(--text-2xl); }
-h3 { font-size: var(--text-lg); font-family: var(--font-body); font-weight: 700; line-height: 1.3; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.2; margin: 0; }
+h2 { font-size: 20px; }
+h3 { font-size: 15.5px; }
+p { margin: 0; }
 
 a { color: inherit; text-underline-offset: 3px; }
+button, input { font: inherit; color: inherit; }
 
-:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-}
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 8px; }
+
+/* Cor de texto derivada da cor do nível (--lvl definida em cada elemento) */
+.lvl-text { color: color-mix(in srgb, var(--lvl) var(--lvl-mix-amount), var(--lvl-mix-base)); }
+
+/* ---------- 4. Utilitários ---------- */
+.shell { max-width: var(--max-width); margin: 0 auto; padding-inline: clamp(16px, 3vw, 28px); }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -76,60 +154,87 @@ a { color: inherit; text-underline-offset: 3px; }
 }
 
 .skip-link {
-  position: absolute; left: var(--space-4); top: -3rem;
-  background: var(--ink); color: #fff; padding: var(--space-2) var(--space-4); z-index: 10;
+  position: absolute; left: 16px; top: -3rem; z-index: 100;
+  padding: 8px 16px; border-radius: var(--r-sm);
+  background: var(--brand); color: #fff;
 }
-.skip-link:focus { top: var(--space-2); }
+.skip-link:focus { top: 8px; }
 
-/* ---------- Botões ---------- */
-.button {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
-  min-height: 44px; padding: 0 var(--space-4);
-  border: 2px solid var(--ink); border-radius: var(--radius-sm);
-  background: var(--ink); color: #fff;
-  font: inherit; font-weight: 700; cursor: pointer;
+/* Ícones SVG em linha (traço herda a cor do texto) */
+.ic {
+  width: 1em; height: 1em; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
 }
-.button:hover { background: #24363F; }
-.button--ghost { background: transparent; color: var(--ink); }
-.button--ghost:hover { background: rgba(22, 36, 44, 0.06); }
-.button:disabled { opacity: 0.55; cursor: progress; }
 
-/* ---------- Campo de busca ---------- */
+/* ---------- 5. Componentes básicos ---------- */
+.card {
+  position: relative;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+  /*
+   * Sem backdrop-filter nos cartões: o desfoque é recalculado a cada quadro
+   * da rolagem (o fundo é fixo e se move em relação a eles), o que deixava
+   * a rolagem lenta. Sobre o fundo de gradiente suave, o efeito era quase invisível.
+   */
+  box-shadow: var(--shadow-sm);
+}
+.card-pad { padding: 22px; }
 
-input {
-  font: inherit; color: var(--ink);
-  min-height: 44px; padding: var(--space-2) var(--space-3);
-  border: 2px solid var(--line); border-radius: var(--radius-sm);
-  background: var(--surface); width: 100%;
+/* Pílula: rótulos curtos e atalhos */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 12px;
+  border-radius: 999px; border: 1px solid var(--border-soft); background: var(--surface-3);
+  color: var(--text-2); font-size: 12.5px; font-weight: 600; white-space: nowrap;
 }
-input:focus { border-color: var(--ink); }
+.chip--button { cursor: pointer; transition: background 0.2s, color 0.2s; }
+.chip--button:hover { background: var(--surface-2); color: var(--text); }
+.chip--button:disabled { opacity: 0.6; cursor: progress; }
 
-/* ---------- Interruptor (switch) ---------- */
-.switch {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  min-height: 44px; border: 0; background: none; padding: 0;
-  font: inherit; font-weight: 700; color: inherit; cursor: pointer;
+/* Botão quadrado com ícone (localização, notificações, tema) */
+.icon-btn {
+  width: 42px; height: 42px; display: grid; place-items: center; font-size: 19px;
+  border-radius: 12px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-2); cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
-.switch__track {
-  width: 2.75rem; height: 1.5rem; border-radius: 1rem;
-  background: #9AA8AC; position: relative; transition: background 0.15s;
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+.icon-btn:disabled { opacity: 0.6; cursor: progress; }
+/* Estado ligado: notificações ativas */
+.icon-btn[aria-checked="true"] {
+  background: color-mix(in srgb, var(--brand) 20%, transparent);
+  border-color: var(--brand); color: var(--text);
 }
-.switch__track::after {
-  content: ''; position: absolute; top: 3px; left: 3px;
-  width: 1.125rem; height: 1.125rem; border-radius: 50%; background: #fff;
-  transition: transform 0.15s;
-}
-.switch[aria-checked="true"] .switch__track { background: var(--risk-normal); }
-.switch[aria-checked="true"] .switch__track::after { transform: translateX(1.25rem); }
 
-/* ---------- Mensagens ---------- */
+/* Botão de tema: mostra a lua no tema claro e o sol no tema escuro */
+.icon-btn .ic-sun { display: none; }
+.icon-btn[aria-pressed="true"] .ic-sun { display: block; }
+.icon-btn[aria-pressed="true"] .ic-moon { display: none; }
+
+/* ---------- 6. Mensagens ---------- */
 .status {
-  max-width: var(--max-width); margin: var(--space-4) auto 0; padding: var(--space-3) var(--space-4);
-  border-left: 4px solid var(--ink); background: var(--surface);
+  margin-top: 16px; padding: 12px 16px; border-radius: var(--r-md);
+  background: var(--surface); border: 1px solid var(--border-soft); color: var(--text-2);
 }
-.status--error { border-color: var(--danger); color: var(--danger); font-weight: 700; }
-.empty { color: var(--ink-soft); list-style: none; }
+.status--error {
+  color: var(--danger); font-weight: 600;
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+.empty { color: var(--muted); list-style: none; }
+
+/* Aviso flutuante na parte de baixo da tela (sai do fluxo: não desloca o layout) */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; z-index: 200;
+  /* Escondido: totalmente abaixo da tela e invisível (sem sobra aparecendo no rodapé) */
+  transform: translate(-50%, calc(100% + 32px)); visibility: hidden; max-width: min(92vw, 460px);
+  padding: 12px 18px; border-radius: 14px;
+  /* Fundo opaco: sem desfoque, um fundo translúcido deixaria o texto ilegível sobre o conteúdo */
+  background: var(--bg-2); border: 1px solid var(--border); box-shadow: var(--shadow);
+  font-size: 14px;
+  /* visibility muda só depois que a animação de saída termina */
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.35s;
+}
+.toast--visible { transform: translate(-50%, 0); visibility: visible; transition-delay: 0s; }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
