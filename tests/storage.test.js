@@ -52,6 +52,15 @@ test('PreferencesService: primeiro acesso grava Santiago e troca de localidade Ã
   assert.equal(service.listRecentLocations().length, 2);
 });
 
+test('PreferencesService: tema escolhido fica gravado no localStorage', () => {
+  const memory = new MemoryStorage();
+  const storage = new BrowserStorage(memory);
+  const service = new PreferencesService(new PreferencesRepository(storage), new LocationRepository(storage));
+  service.setTheme('dark');
+  assert.equal(JSON.parse(memory.getItem('alerta-saude:v1:preferences')).theme, 'dark');
+  assert.equal(service.getPreferences().theme, 'dark');
+});
+
 test('ClimateConditionRepository guarda leituras separadas por localidade e respeita o limite', () => {
   const repository = new ClimateConditionRepository(new BrowserStorage(new MemoryStorage()));
   const location = santiago();

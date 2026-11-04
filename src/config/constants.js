@@ -41,6 +41,12 @@ export const STORAGE_KEYS = Object.freeze({
   ALERTS_PREFIX: 'alerts:', // + id da localidade
 });
 
+// Temas visuais da página. Sem tema salvo (null), a página segue o tema do sistema.
+export const THEMES = Object.freeze({
+  LIGHT: 'light',
+  DARK: 'dark',
+});
+
 // Público-alvo das recomendações (grupos vulneráveis citados na proposta)
 export const TARGET_GROUPS = Object.freeze({
   GENERAL: 'geral',

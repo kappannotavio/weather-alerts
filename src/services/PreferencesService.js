@@ -1,6 +1,6 @@
 /**
  * PreferencesService.js
- * Preferências deste navegador: localidade consultada e notificações.
+ * Preferências deste navegador: localidade consultada, notificações e tema.
  * Não há cadastro nem login; as preferências ficam no localStorage.
  * Importa: PreferencesRepository, LocationRepository, Location e APP_CONFIG.
  */
@@ -60,6 +60,17 @@ export class PreferencesService {
     const preferences = this.preferencesRepository.get();
     if (enabled) preferences.enableNotifications();
     else preferences.disableNotifications();
+    return this.preferencesRepository.save(preferences);
+  }
+
+  /**
+   * Caso de uso "Alternar tema": grava o tema escolhido (claro ou escuro)
+   * no registro de preferências do localStorage.
+   * @param {'light'|'dark'} theme
+   */
+  setTheme(theme) {
+    const preferences = this.preferencesRepository.get();
+    preferences.setTheme(theme);
     return this.preferencesRepository.save(preferences);
   }
 }

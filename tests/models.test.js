@@ -29,6 +29,16 @@ test('Preferences: seleciona localidade e alterna notificações', () => {
   assert.equal(preferences.toRecord().notificationsEnabled, true);
 });
 
+test('Preferences: tema começa seguindo o sistema e só aceita claro ou escuro', () => {
+  const preferences = new Preferences();
+  assert.equal(preferences.theme, null);
+  preferences.setTheme('dark');
+  assert.equal(preferences.toRecord().theme, 'dark');
+  assert.throws(() => preferences.setTheme('azul'), TypeError);
+  // Valor inválido vindo do localStorage é descartado
+  assert.equal(new Preferences({ theme: '<script>' }).theme, null);
+});
+
 test('Alert: vigência respeita início, expiração e encerramento', () => {
   const now = new Date('2026-11-04T12:00:00Z');
   const alert = new Alert({ startsAt: '2026-11-04T10:00:00Z', expiresAt: '2026-11-04T20:00:00Z' });
