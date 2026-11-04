@@ -48,7 +48,7 @@ A documentação do trabalho (DOCX/PDF e diagramas UML) é entregue à parte e n
 
 | Chave | Conteúdo |
 |---|---|
-| `alerta-saude:v1:preferences` | Localidade atual e notificações |
+| `alerta-saude:v1:preferences` | Localidade atual, notificações e tema (claro/escuro) |
 | `alerta-saude:v1:locations` | Localidades consultadas |
 | `alerta-saude:v1:conditions:<id>` | Últimas 24 leituras da localidade |
 | `alerta-saude:v1:alerts:<id>` | Últimos 30 alertas da localidade |
