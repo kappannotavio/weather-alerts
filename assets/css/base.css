@@ -1,0 +1,135 @@
+/*
+ * base.css
+ * Tokens de design e componentes básicos da página (index.html).
+ * Fontes: Barlow Condensed (títulos, lembra sinalização de Defesa Civil)
+ * e Atkinson Hyperlegible (texto, criada para leitores com baixa visão).
+ */
+:root {
+  --ink: #16242C;
+  --ink-soft: #46565C;
+  --paper: #F6F8F7;
+  --surface: #FFFFFF;
+  --line: #D3DCD9;
+  --focus: #1D5FD1;
+  --danger: #A82822;
+  --risk-normal: #1E7A4C;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+
+  /* Escala tipográfica (razão ~1,25) */
+  --text-sm: 0.875rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.6rem;
+  --text-2xl: 2.25rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --max-width: 72rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Garante que o atributo hidden vença regras de display dos componentes */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.55;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.05;
+  margin: 0;
+}
+
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-lg); font-family: var(--font-body); font-weight: 700; line-height: 1.3; }
+
+a { color: inherit; text-underline-offset: 3px; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: var(--space-4); top: -3rem;
+  background: var(--ink); color: #fff; padding: var(--space-2) var(--space-4); z-index: 10;
+}
+.skip-link:focus { top: var(--space-2); }
+
+/* ---------- Botões ---------- */
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: 44px; padding: 0 var(--space-4);
+  border: 2px solid var(--ink); border-radius: var(--radius-sm);
+  background: var(--ink); color: #fff;
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.button:hover { background: #24363F; }
+.button--ghost { background: transparent; color: var(--ink); }
+.button--ghost:hover { background: rgba(22, 36, 44, 0.06); }
+.button:disabled { opacity: 0.55; cursor: progress; }
+
+/* ---------- Campo de busca ---------- */
+
+input {
+  font: inherit; color: var(--ink);
+  min-height: 44px; padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface); width: 100%;
+}
+input:focus { border-color: var(--ink); }
+
+/* ---------- Interruptor (switch) ---------- */
+.switch {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: 44px; border: 0; background: none; padding: 0;
+  font: inherit; font-weight: 700; color: inherit; cursor: pointer;
+}
+.switch__track {
+  width: 2.75rem; height: 1.5rem; border-radius: 1rem;
+  background: #9AA8AC; position: relative; transition: background 0.15s;
+}
+.switch__track::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 1.125rem; height: 1.125rem; border-radius: 50%; background: #fff;
+  transition: transform 0.15s;
+}
+.switch[aria-checked="true"] .switch__track { background: var(--risk-normal); }
+.switch[aria-checked="true"] .switch__track::after { transform: translateX(1.25rem); }
+
+/* ---------- Mensagens ---------- */
+.status {
+  max-width: var(--max-width); margin: var(--space-4) auto 0; padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--ink); background: var(--surface);
+}
+.status--error { border-color: var(--danger); color: var(--danger); font-weight: 700; }
+.empty { color: var(--ink-soft); list-style: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
