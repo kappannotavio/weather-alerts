@@ -1,0 +1,28 @@
+# Dependências e caches
+node_modules/
+.npm/
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+
+# Documentação do trabalho (DOCX/PDF, diagramas e capturas): entregue à parte, fora do repositório
+docs/
+
+# Arquivos temporários do Word/LibreOffice
+~$*
+.~lock*
+
+# IDE e sistema operacional
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
