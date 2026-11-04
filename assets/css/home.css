@@ -28,8 +28,16 @@
 }
 .city-results button:hover, .city-results button:focus-visible { background: var(--paper); }
 .city-results__empty { padding: var(--space-3) var(--space-4); color: var(--ink-soft); }
-.notify { display: grid; justify-items: start; }
-.notify__hint { margin: 0; max-width: 18rem; font-size: var(--text-sm); color: var(--ink-soft); }
+/*
+ * Bloco de notificações com largura fixa e espaço reservado para a dica
+ * (duas linhas). Assim, quando a dica aparece, some ou muda de texto ao
+ * ativar/desativar, a busca ao lado e o painel abaixo não se deslocam.
+ */
+.notify { display: grid; justify-items: start; flex: 0 1 18rem; max-width: 100%; }
+.notify__hint {
+  margin: 0; font-size: var(--text-sm); line-height: 1.4; color: var(--ink-soft);
+  min-height: 2.8em; /* 2 linhas x line-height 1.4 */
+}
 
 /* ---------- Painel de risco ---------- */
 .risk {
