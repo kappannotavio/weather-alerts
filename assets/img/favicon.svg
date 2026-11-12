@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Ícone: termômetro sobre um losango de sinalização -->
+  <rect x="4.7" y="4.7" width="22.6" height="22.6" rx="3" transform="rotate(45 16 16)" fill="#C55A11"/>
+  <rect x="14" y="7" width="4" height="12" rx="2" fill="#fff"/>
+  <circle cx="16" cy="21" r="4" fill="#fff"/>
+  <circle cx="16" cy="21" r="2" fill="#A82822"/>
+  <rect x="15.2" y="12" width="1.6" height="8" fill="#A82822"/>
+</svg>
