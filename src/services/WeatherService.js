@@ -4,11 +4,11 @@
  * Open-Meteo (https://open-meteo.com, gratuita e sem chave de acesso).
  * Antes de chamar a API, verifica no localStorage se existe leitura
  * recente da mesma localidade (cache de 15 min), reduzindo requisições.
- * Importa: APP_CONFIG, ClimateCondition, ExternalServiceError.
+ * Importa: APP_CONFIG, ClimateCondition e fetchJson.
  */
 import { APP_CONFIG } from '../config/constants.js';
 import { ClimateCondition } from '../models/ClimateCondition.js';
-import { ExternalServiceError } from '../utils/errors.js';
+import { fetchJson } from '../utils/http.js';
 
 // Variáveis solicitadas à API (atuais e previsão diária de hoje)
 const CURRENT_FIELDS = 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code';
@@ -54,8 +54,8 @@ export class WeatherService {
     return this.conditionRepository.findByLocation(locationId);
   }
 
-  /** Faz a requisição HTTP GET à API com tempo limite (AbortController). */
-  async #fetchForecast({ latitude, longitude }) {
+  /** Faz a requisição HTTP GET à API de previsão (tempo limite em fetchJson). */
+  #fetchForecast({ latitude, longitude }) {
     const params = new URLSearchParams({
       latitude: String(latitude),
       longitude: String(longitude),
@@ -64,20 +64,6 @@ export class WeatherService {
       timezone: 'auto',
       forecast_days: '1',
     });
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), APP_CONFIG.API_TIMEOUT_MS);
-
-    try {
-      const response = await this.httpClient(`${APP_CONFIG.WEATHER_API_URL}?${params}`, { signal: controller.signal });
-      if (!response.ok) {
-        throw new ExternalServiceError(`O serviço de clima respondeu com erro (${response.status}). Tente novamente em instantes.`);
-      }
-      return await response.json();
-    } catch (error) {
-      if (error instanceof ExternalServiceError) throw error;
-      throw new ExternalServiceError('Não foi possível obter os dados do clima. Verifique sua conexão com a internet.');
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return fetchJson(this.httpClient, `${APP_CONFIG.WEATHER_API_URL}?${params}`, 'clima');
   }
 }
