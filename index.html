@@ -71,6 +71,7 @@
         <li><a href="#cuidados">O que fazer</a></li>
         <li><a href="#alertas">Alertas</a></li>
         <li><a href="#leituras">Últimas leituras</a></li>
+        <li><a href="#historico">Últimos 10 dias</a></li>
       </ul>
       <!-- Atalhos para localidades já consultadas (salvas no navegador) -->
       <div id="recent-locations" class="recent" aria-label="Localidades consultadas" role="group" hidden>
@@ -164,6 +165,23 @@
         </div>
       </section>
     </div>
+
+    <!-- ============ HISTÓRICO: resumo diário dos últimos 10 dias ============ -->
+    <!-- Fonte provisória: Open-Meteo (modelo). A estação INMET A833 (Santiago) depende de token do INMET. -->
+    <section id="historico" class="card card-pad daily-card" aria-labelledby="daily-title">
+      <div class="sec-head sec-head--card">
+        <div>
+          <h2 id="daily-title">Últimos 10 dias</h2>
+          <p>Resumo diário da localidade atual, classificado com a mesma escala de risco. <span id="daily-meta"></span></p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="history" aria-labelledby="daily-title" aria-busy="true">
+          <thead><tr><th>Dia</th><th>Tempo</th><th>Mín. / Máx.</th><th>Sensação máx.</th><th>Umidade mín.</th><th>Chuva</th><th>Nível</th></tr></thead>
+          <tbody id="daily-table"></tbody>
+        </table>
+      </div>
+    </section>
 
     <!-- ============ RODAPÉ ============ -->
     <footer class="site-footer">

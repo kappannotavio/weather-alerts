@@ -6,7 +6,7 @@
  * Importa: utilitários dom.js e format.js, TARGET_GROUP_LABELS, TARGET_GROUPS e THEMES.
  */
 import { h, replaceChildren } from '../utils/dom.js';
-import { formatTemperature, formatHumidity, formatTime, formatDateTime, describeWeatherCode, describeUvIndex } from '../utils/format.js';
+import { formatTemperature, formatHumidity, formatTime, formatDateTime, formatDay, formatPrecipitation, describeWeatherCode, describeUvIndex } from '../utils/format.js';
 import { TARGET_GROUP_LABELS, TARGET_GROUPS, THEMES } from '../config/constants.js';
 
 // Comprimento do arco do medidor (2 x pi x raio 70 do círculo no index.html)
@@ -44,6 +44,8 @@ export class HomeView {
     this.toast = root.getElementById('toast');
     this.recentLocations = root.getElementById('recent-locations');
     this.historyTable = root.getElementById('history-table');
+    this.dailyTable = root.getElementById('daily-table');
+    this.dailyMeta = root.getElementById('daily-meta');
     this.toastTimer = null;
 
     // Se o tema do sistema mudar (sem tema salvo), o botão de tema acompanha
@@ -223,6 +225,45 @@ export class HomeView {
         h('td', { text: formatHumidity(condition.humidity) }),
         h('td', {}, h('span', { className: 'lvl-tag lvl-text', text: level?.name ?? '—', style: { '--lvl': level?.color ?? '#64748b' } })));
     }));
+  }
+
+  // ---------- Histórico dos últimos dias ----------
+
+  showDailyHistoryLoading() {
+    this.dailyTable.closest('table').setAttribute('aria-busy', 'true');
+    // Na primeira carga a tabela está vazia; nas seguintes mantém os dias já exibidos
+    if (!this.dailyTable.hasChildNodes()) this.#renderDailyMessage('Carregando…');
+  }
+
+  /** Resumo diário dos últimos dias, com o nível de risco de cada dia. */
+  renderDailyHistory({ fetchedAt, days }, levelsById) {
+    this.dailyTable.closest('table').removeAttribute('aria-busy');
+    this.dailyMeta.textContent = `Consultado às ${formatTime(fetchedAt)}.`;
+    if (days.length === 0) {
+      this.#renderDailyMessage('Nenhum dado disponível para os últimos dias.');
+      return;
+    }
+    replaceChildren(this.dailyTable, days.map((day) => {
+      const level = levelsById.get(day.riskLevelId);
+      return h('tr', {},
+        h('td', { text: formatDay(day.date) }),
+        h('td', { text: describeWeatherCode(day.weatherCode) }),
+        h('td', { text: `${formatTemperature(day.minTemperature)} / ${formatTemperature(day.maxTemperature)}` }),
+        h('td', { text: formatTemperature(day.maxApparentTemperature) }),
+        h('td', { text: formatHumidity(day.minHumidity) }),
+        h('td', { text: formatPrecipitation(day.precipitation) }),
+        h('td', {}, h('span', { className: 'lvl-tag lvl-text', text: level?.name ?? '—', style: { '--lvl': level?.color ?? '#64748b' } })));
+    }));
+  }
+
+  showDailyHistoryError(message) {
+    this.dailyTable.closest('table').removeAttribute('aria-busy');
+    this.dailyMeta.textContent = '';
+    this.#renderDailyMessage(message);
+  }
+
+  #renderDailyMessage(message) {
+    replaceChildren(this.dailyTable, h('tr', {}, h('td', { className: 'empty', text: message, attrs: { colspan: 7 } })));
   }
 
   /** Sugestões de cidades encontradas na busca. */

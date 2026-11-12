@@ -22,6 +22,11 @@ export const APP_CONFIG = Object.freeze({
   MAX_CONDITIONS_PER_LOCATION: 24,
   MAX_ALERTS_PER_LOCATION: 30,
 
+  // Histórico diário: quantidade de dias anteriores a hoje e tempo de cache.
+  // Fonte provisória: Open-Meteo; a estação INMET A833 (Santiago) depende de token do INMET.
+  HISTORY_DAYS: 10,
+  HISTORY_CACHE_MINUTES: 60,
+
   // Intervalo de atualização automática da tela
   REFRESH_INTERVAL_MINUTES: 30,
 
@@ -39,6 +44,7 @@ export const STORAGE_KEYS = Object.freeze({
   LOCATIONS: 'locations',
   CONDITIONS_PREFIX: 'conditions:', // + id da localidade
   ALERTS_PREFIX: 'alerts:', // + id da localidade
+  HISTORY_PREFIX: 'history:', // + id da localidade
 });
 
 // Temas visuais da página. Sem tema salvo (null), a página segue o tema do sistema.

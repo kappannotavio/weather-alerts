@@ -11,9 +11,11 @@ import { PreferencesRepository } from '../data/repositories/PreferencesRepositor
 import { LocationRepository } from '../data/repositories/LocationRepository.js';
 import { ClimateConditionRepository } from '../data/repositories/ClimateConditionRepository.js';
 import { AlertRepository } from '../data/repositories/AlertRepository.js';
+import { DailyHistoryRepository } from '../data/repositories/DailyHistoryRepository.js';
 import { RISK_LEVELS } from '../catalog/riskLevels.js';
 import { RiskClassifier } from '../services/RiskClassifier.js';
 import { WeatherService } from '../services/WeatherService.js';
+import { ClimateHistoryService } from '../services/ClimateHistoryService.js';
 import { LocationService } from '../services/LocationService.js';
 import { PreferencesService } from '../services/PreferencesService.js';
 import { RecommendationService } from '../services/RecommendationService.js';
@@ -32,6 +34,7 @@ export function createContainer(storage = globalThis.localStorage) {
     riskLevels: RISK_LEVELS,
     riskClassifier: new RiskClassifier(RISK_LEVELS),
     weatherService: new WeatherService(new ClimateConditionRepository(browserStorage)),
+    climateHistoryService: new ClimateHistoryService(new DailyHistoryRepository(browserStorage)),
     locationService: new LocationService(),
     preferencesService: new PreferencesService(new PreferencesRepository(browserStorage), new LocationRepository(browserStorage)),
     recommendationService: new RecommendationService(),

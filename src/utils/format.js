@@ -7,6 +7,7 @@
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 const timeFormatter = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const dayFormatter = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
 
 /** Formata temperatura: 31.6 -> "32 °C". */
 export function formatTemperature(value) {
@@ -16,6 +17,19 @@ export function formatTemperature(value) {
 /** Formata umidade relativa: 18.2 -> "18%". */
 export function formatHumidity(value) {
   return typeof value === 'number' ? `${Math.round(value)}%` : '—';
+}
+
+/** Formata chuva acumulada: 2.2 -> "2,2 mm". */
+export function formatPrecipitation(value) {
+  return typeof value === 'number' ? `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mm` : '—';
+}
+
+/**
+ * Formata um dia "AAAA-MM-DD": "qua., 11/11".
+ * Usa meio-dia local para o fuso não empurrar a data para o dia anterior.
+ */
+export function formatDay(dateString) {
+  return dateString ? dayFormatter.format(new Date(`${dateString}T12:00:00`)) : '—';
 }
 
 /** Formata data e hora: "04/11/2026 14:30". */

@@ -3,8 +3,9 @@
  * Controlador da página. Orquestra o fluxo principal:
  * localidade (preferências) -> clima (API/cache) -> classificação de
  * risco -> alerta automático -> alertas vigentes -> recomendações ->
- * notificação. Também trata busca de cidade, localidades recentes,
- * troca de público-alvo, notificações e tema claro/escuro.
+ * notificação; em paralelo, o histórico dos últimos dias. Também trata
+ * busca de cidade, localidades recentes, troca de público-alvo,
+ * notificações e tema claro/escuro.
  * Importa: serviços (via container), HomeView, APP_CONFIG, TARGET_GROUPS, THEMES e AppError.
  */
 import { APP_CONFIG, TARGET_GROUPS, THEMES } from '../config/constants.js';
@@ -48,8 +49,13 @@ export class HomeController {
    * "Visualizar alertas").
    */
   async refresh({ forceRefresh = false } = {}) {
-    const { weatherService, riskClassifier, alertService, notificationService, preferencesService, riskLevels } = this.services;
     this.view.showLoading();
+    // Condição atual e histórico são independentes: a falha de um não impede o outro
+    await Promise.all([this.#refreshCurrent(forceRefresh), this.#refreshDailyHistory(forceRefresh)]);
+  }
+
+  async #refreshCurrent(forceRefresh) {
+    const { weatherService, riskClassifier, alertService, notificationService, preferencesService, riskLevels } = this.services;
     try {
       // 1. Condição climática (cache no navegador ou API Open-Meteo)
       const condition = await weatherService.getCurrentCondition(this.location, { forceRefresh });
@@ -77,6 +83,24 @@ export class HomeController {
       }
     } catch (error) {
       this.#handleError(error);
+    }
+  }
+
+  /** Caso de uso "Consultar histórico": resumo dos últimos dias, classificado com a mesma escala de risco. */
+  async #refreshDailyHistory(forceRefresh) {
+    const { climateHistoryService, riskClassifier, riskLevels } = this.services;
+    const location = this.location;
+    this.view.showDailyHistoryLoading();
+    try {
+      const history = await climateHistoryService.getRecentDays(location, { forceRefresh });
+      climateHistoryService.saveClassifications(location.id, history, (day) => riskClassifier.classify(day));
+      // Descarta a resposta se a localidade mudou durante a consulta
+      if (location.id !== this.location.id) return;
+      this.view.renderDailyHistory(history, new Map(riskLevels.map((level) => [level.id, level])));
+    } catch (error) {
+      console.error(error);
+      const message = error instanceof AppError ? error.message : 'Não foi possível carregar o histórico dos últimos dias.';
+      this.view.showDailyHistoryError(message);
     }
   }
 
