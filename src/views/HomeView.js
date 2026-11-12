@@ -181,6 +181,9 @@ export class HomeView {
       return;
     }
     replaceChildren(this.recommendationList, recommendations.map((item) => h('li', { className: 'care-card' },
+      // Ilustração decorativa (alt vazio): o título já descreve a recomendação
+      item.illustration ? h('div', { className: 'care-card__art' },
+        h('img', { attrs: { src: `assets/img/care/${item.illustration}.svg`, alt: '', width: 112, height: 112, loading: 'lazy' } })) : null,
       h('h3', { text: item.title }),
       h('p', { text: item.description }),
       item.targetGroup !== TARGET_GROUPS.GENERAL ? h('span', { className: 'care-card__group', text: TARGET_GROUP_LABELS[item.targetGroup] }) : null)));
