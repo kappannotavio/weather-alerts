@@ -6,6 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { Alert } from '../src/models/Alert.js';
 import { Location } from '../src/models/Location.js';
 import { Preferences } from '../src/models/Preferences.js';
@@ -85,4 +86,12 @@ test('RecommendationService: aba de grupo mostra o grupo e as gerais', () => {
   const all = service.listForRiskLevel('alerta', 'geral');
   assert.equal(all.length, RECOMMENDATIONS.filter((item) => item.riskLevelId === 'alerta').length);
   assert.ok(all[0].isGeneral());
+});
+
+test('catálogo: toda recomendação tem ilustração existente em assets/img/care', () => {
+  for (const recommendation of RECOMMENDATIONS) {
+    assert.ok(recommendation.illustration, `${recommendation.id} sem ilustração`);
+    const file = new URL(`../assets/img/care/${recommendation.illustration}.svg`, import.meta.url);
+    assert.ok(existsSync(file), `${recommendation.id}: ${recommendation.illustration}.svg não encontrado`);
+  }
 });
