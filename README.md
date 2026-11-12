@@ -3,7 +3,7 @@
 Aplicação web que informa à população o risco à saúde causado pelo calor e pela baixa umidade do ar, com recomendações de cuidado e alertas. Projeto ligado ao PET-Saúde Clima.
 
 - **Linguagem:** JavaScript (ES2022, classes e módulos ES), HTML5 e CSS3, sem framework e sem bibliotecas externas.
-- **Dados climáticos:** [Open-Meteo](https://open-meteo.com/), API gratuita e sem chave de acesso.
+- **Dados climáticos:** [Open-Meteo](https://open-meteo.com/), API gratuita e sem chave de acesso. Inclui o resumo diário dos últimos 10 dias (`past_days`).
 - **Níveis de risco e recomendações:** definidos no próprio código (`src/catalog`).
 - **Armazenamento:** `localStorage` do navegador, separado por localidade. Não há servidor nem cadastro.
 
@@ -52,8 +52,13 @@ A documentação do trabalho (DOCX/PDF e diagramas UML) é entregue à parte e n
 | `alerta-saude:v1:locations` | Localidades consultadas |
 | `alerta-saude:v1:conditions:<id>` | Últimas 24 leituras da localidade |
 | `alerta-saude:v1:alerts:<id>` | Últimos 30 alertas da localidade |
+| `alerta-saude:v1:history:<id>` | Resumo diário dos últimos 10 dias da localidade (cache de 60 min) |
 
 O `<id>` da localidade é formado pelas coordenadas com duas casas decimais (ex.: `-29.19_-54.87`).
+
+## Histórico dos últimos 10 dias
+
+A seção "Últimos 10 dias" usa, por enquanto, dados de modelo do Open-Meteo para as coordenadas da localidade. A fonte desejada é a estação automática do INMET em Santiago (**A833**), mas a API do INMET (`apitempo.inmet.gov.br`) só entrega observações com token, solicitado por e-mail ao INMET. Para trocar de fonte, basta outra implementação de `#fetchDays` em `src/services/ClimateHistoryService.js` que devolva objetos `DailyClimate`.
 
 ## Limitações
 
