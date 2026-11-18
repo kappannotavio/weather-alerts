@@ -200,8 +200,9 @@ export class HomeView {
       const level = levelsById.get(condition.riskLevelId);
       return h('tr', {},
         h('td', { text: formatDateTime(condition.observedAt) }),
-        h('td', { text: formatTemperature(condition.temperature) }),
-        h('td', { text: formatTemperature(condition.apparentTemperature) }),
+        // Uma casa decimal, como na tabela do INMET, para facilitar a conferência
+        h('td', { text: formatTemperature(condition.temperature, 1) }),
+        h('td', { text: formatTemperature(condition.apparentTemperature, 1) }),
         h('td', { text: formatHumidity(condition.humidity) }),
         h('td', {}, h('span', { className: 'lvl-tag lvl-text', text: level?.name ?? '—', style: { '--lvl': level?.color ?? '#64748b' } })));
     }));

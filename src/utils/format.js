@@ -12,9 +12,16 @@ const timeFormatter = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute
 // Dia "AAAA-MM-DD" já é local: formata em UTC para não deslocar a data
 const dayFormatter = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 
-/** Formata temperatura: 31.6 -> "32 °C". */
-export function formatTemperature(value) {
-  return typeof value === 'number' ? `${Math.round(value)} °C` : '—';
+/**
+ * Formata temperatura: 31.6 -> "32 °C" ou, com decimals = 1, "31,6 °C"
+ * (mesma precisão da tabela de dados do INMET).
+ * @param {number|null} value
+ * @param {number} decimals - casas decimais (padrão 0)
+ */
+export function formatTemperature(value, decimals = 0) {
+  if (typeof value !== 'number') return '—';
+  const text = value.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return `${text} °C`;
 }
 
 /** Formata umidade relativa: 18.2 -> "18%". */
