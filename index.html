@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Alerta Saúde: nível de risco do calor e do ar seco para a saúde e o que fazer em cada situação.">
-  <!-- Política de segurança de conteúdo: só scripts locais e conexões com a API Open-Meteo -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com; img-src 'self' data:">
+  <!-- Política de segurança de conteúdo: só scripts locais e conexões com o espelho público do WIS2 (dados da estação) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://wis2globalcache.s3.amazonaws.com; img-src 'self' data:">
   <!-- Informa ao navegador que a página tem tema claro e escuro (barras de rolagem, campos nativos) -->
   <meta name="color-scheme" content="light dark">
   <title>Alerta Saúde</title>
@@ -34,21 +34,7 @@
         </span>
       </a>
 
-      <!-- Busca de cidade (API de geocodificação Open-Meteo) -->
-      <form id="location-form" class="search" role="search">
-        <div class="search-box">
-          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <label for="city-input" class="sr-only">Buscar cidade</label>
-          <input id="city-input" name="city" type="search" placeholder="Buscar cidade…" autocomplete="off" maxlength="60">
-          <button type="submit" class="search-submit">Buscar</button>
-        </div>
-        <ul id="city-results" class="search-results" hidden></ul>
-      </form>
-
       <div class="header-actions">
-        <button type="button" id="geo-button" class="icon-btn" title="Usar minha localização" aria-label="Usar minha localização">
-          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5"/></svg>
-        </button>
         <!-- Interruptor de notificações (role="switch"; o estado fica em aria-checked) -->
         <button type="button" id="notify-toggle" class="icon-btn" role="switch" aria-checked="false" aria-label="Notificações de alertas" aria-describedby="notify-hint" title="Notificações de alertas">
           <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>
@@ -70,14 +56,9 @@
         <li><a href="#agora">Agora</a></li>
         <li><a href="#cuidados">O que fazer</a></li>
         <li><a href="#alertas">Alertas</a></li>
-        <li><a href="#leituras">Últimas leituras</a></li>
+        <li><a href="#leituras">Últimas medições</a></li>
         <li><a href="#historico">Últimos 10 dias</a></li>
       </ul>
-      <!-- Atalhos para localidades já consultadas (salvas no navegador) -->
-      <div id="recent-locations" class="recent" aria-label="Localidades consultadas" role="group" hidden>
-        <span class="recent__label">Consultadas antes:</span>
-        <ul></ul>
-      </div>
     </div>
   </nav>
 
@@ -90,7 +71,7 @@
           <div class="place">
             <p class="place-name">
               <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
-              <strong id="place-name">Santiago, RS</strong>
+              <strong id="place-name">Santiago, Rio Grande do Sul</strong>
             </p>
             <p id="updated-at" class="place-meta"></p>
           </div>
@@ -144,7 +125,7 @@
         <div class="sec-head sec-head--card">
           <div>
             <h2 id="alerts-title">Alertas</h2>
-            <p>Gerados automaticamente para a localidade atual.</p>
+            <p>Gerados automaticamente a partir das medições da estação.</p>
           </div>
         </div>
         <ul id="alert-list" class="alert-list"></ul>
@@ -153,13 +134,13 @@
       <section id="leituras" class="card card-pad" aria-labelledby="history-title">
         <div class="sec-head sec-head--card">
           <div>
-            <h2 id="history-title">Últimas leituras</h2>
-            <p>Salvas neste navegador para a localidade atual.</p>
+            <h2 id="history-title">Últimas medições</h2>
+            <p>Medições de hora em hora da estação, salvas neste navegador.</p>
           </div>
         </div>
         <div class="table-wrap">
           <table class="history" aria-labelledby="history-title">
-            <thead><tr><th>Data e hora</th><th>Sensação</th><th>Umidade</th><th>Nível</th></tr></thead>
+            <thead><tr><th>Data e hora</th><th>Temperatura</th><th>Sensação</th><th>Umidade</th><th>Nível</th></tr></thead>
             <tbody id="history-table"></tbody>
           </table>
         </div>
@@ -167,17 +148,17 @@
     </div>
 
     <!-- ============ HISTÓRICO: resumo diário dos últimos 10 dias ============ -->
-    <!-- Fonte provisória: Open-Meteo (modelo). A estação INMET A833 (Santiago) depende de token do INMET. -->
+    <!-- Calculado com as medições horárias da estação salvas no navegador (o espelho do WIS2 guarda só ~24 a 48 h) -->
     <section id="historico" class="card card-pad daily-card" aria-labelledby="daily-title">
       <div class="sec-head sec-head--card">
         <div>
           <h2 id="daily-title">Últimos 10 dias</h2>
-          <p>Resumo diário da localidade atual, classificado com a mesma escala de risco. <span id="daily-meta"></span></p>
+          <p>Resumo de cada dia, classificado com a mesma escala de risco. <span id="daily-meta"></span></p>
         </div>
       </div>
       <div class="table-wrap">
         <table class="history" aria-labelledby="daily-title" aria-busy="true">
-          <thead><tr><th>Dia</th><th>Tempo</th><th>Mín. / Máx.</th><th>Sensação máx.</th><th>Umidade mín.</th><th>Chuva</th><th>Nível</th></tr></thead>
+          <thead><tr><th>Dia</th><th>Mín. / Máx.</th><th>Sensação máx.</th><th>Umidade mín.</th><th>Chuva</th><th>Horas medidas</th><th>Nível</th></tr></thead>
           <tbody id="daily-table"></tbody>
         </table>
       </div>
@@ -186,7 +167,7 @@
     <!-- ============ RODAPÉ ============ -->
     <footer class="site-footer">
       <p class="footer-note">Esta ferramenta <b>não substitui orientação médica</b>. Em caso de sintomas intensos, procure um profissional de saúde. Em emergências, ligue <b>192</b> (SAMU).</p>
-      <p class="footer-note">Dados meteorológicos: <a href="https://open-meteo.com/" rel="noopener" target="_blank">Open-Meteo</a> (CC BY 4.0). Os dados consultados ficam salvos apenas neste navegador.</p>
+      <p class="footer-note">Dados meteorológicos: estação automática A833 do <a href="https://portal.inmet.gov.br/" rel="noopener" target="_blank">INMET</a>, obtidos pelo WIS2, o sistema de troca de dados da Organização Meteorológica Mundial. A sensação térmica é calculada pelo índice de calor da NOAA. Os dados consultados ficam salvos apenas neste navegador.</p>
       <p class="footer-note">Projeto ligado ao PET-Saúde Clima.</p>
     </footer>
   </main>

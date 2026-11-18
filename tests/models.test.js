@@ -15,19 +15,21 @@ import { RISK_LEVELS, findRiskLevel } from '../src/catalog/riskLevels.js';
 import { RECOMMENDATIONS } from '../src/catalog/recommendations.js';
 import { RecommendationService } from '../src/services/RecommendationService.js';
 
-test('Location: id é derivado das coordenadas (mesma cidade, mesma chave)', () => {
-  const a = new Location({ name: 'Santiago', latitude: -29.1917, longitude: -54.8672 });
+test('Location: id é derivado das coordenadas e o dia local segue o fuso da estação', () => {
+  const a = new Location({ name: 'Santiago', latitude: -29.1917, longitude: -54.8672, utcOffsetHours: -3 });
   const b = new Location({ name: 'Santiago, RS', latitude: -29.19, longitude: -54.87 });
   assert.equal(a.id, '-29.19_-54.87');
   assert.equal(a.id, b.id);
+  // 02h UTC de 16/11 ainda é 23h de 15/11 em Santiago (UTC-3)
+  assert.equal(a.localDateOf('2026-11-16T02:00:00Z'), '2026-11-15');
+  assert.equal(a.localDateOf('2026-11-16T03:00:00Z'), '2026-11-16');
 });
 
-test('Preferences: seleciona localidade e alterna notificações', () => {
-  const preferences = new Preferences();
-  preferences.selectLocation(new Location({ latitude: -15.6, longitude: -56.1 }));
+test('Preferences: alterna notificações e descarta campo antigo de localidade', () => {
+  const preferences = new Preferences({ currentLocationId: '-15.60_-56.10' });
   preferences.enableNotifications();
-  assert.equal(preferences.currentLocationId, '-15.60_-56.10');
   assert.equal(preferences.toRecord().notificationsEnabled, true);
+  assert.equal('currentLocationId' in preferences.toRecord(), false);
 });
 
 test('Preferences: tema começa seguindo o sistema e só aceita claro ou escuro', () => {
@@ -60,17 +62,19 @@ test('Alert.createFrom usa a mensagem do nível e expira no fim do dia', () => {
   assert.equal(alert.wasNotified(), false);
 });
 
-test('ClimateCondition.fromApiResponse converte a resposta da Open-Meteo', () => {
-  const json = {
-    current: { time: '2026-11-04T14:00', temperature_2m: 33.1, relative_humidity_2m: 25, apparent_temperature: 35.2, weather_code: 0 },
-    daily: { temperature_2m_max: [36], apparent_temperature_max: [38.4], relative_humidity_2m_min: [18], uv_index_max: [10.2] },
-  };
-  const location = new Location({ name: 'Cuiabá', latitude: -15.6, longitude: -56.1 });
-  const condition = ClimateCondition.fromApiResponse(json, location);
-  assert.equal(condition.locationId, location.id);
+test('ClimateCondition.fromObservation calcula a sensação e usa id fixo por hora', () => {
+  const location = new Location({ name: 'Santiago', latitude: -29.19, longitude: -54.89 });
+  const observation = { observedAt: '2026-11-16T18:00:00.000Z', temperature: 33.2, humidity: 46, dewPoint: 20, pressure: 958.7, precipitation: 0, maxTemperature: 33.2, minTemperature: 31.1 };
+  const condition = ClimateCondition.fromObservation(observation, location);
+  assert.equal(condition.id, '-29.19_-54.89@2026-11-16T18:00:00.000Z');
+  assert.ok(condition.apparentTemperature > 33.2);
+  // Resumo do dia pior que a hora atual: a classificação usa o pior valor
+  condition.applyDailySummary({ maxTemperature: 35, maxApparentTemperature: 38.4, minHumidity: 18, dailyPrecipitation: 0 });
   assert.equal(condition.getEvaluatedTemperature(), 38.4);
   assert.equal(condition.getEvaluatedHumidity(), 18);
-  assert.throws(() => ClimateCondition.fromApiResponse({}, location));
+  assert.equal(condition.isStale(180, new Date('2026-11-16T20:00:00Z')), false);
+  assert.equal(condition.isStale(180, new Date('2026-11-16T22:00:00Z')), true);
+  assert.throws(() => ClimateCondition.fromObservation({ observedAt: '2026-11-16T18:00:00.000Z' }, location));
 });
 
 test('catálogo: toda recomendação aponta para um nível existente e todo nível tem recomendação geral', () => {

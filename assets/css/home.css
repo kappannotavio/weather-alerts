@@ -26,39 +26,6 @@
 .brand-name { font-family: var(--font-display); font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
 .brand-sub { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 
-/* Busca de cidade */
-.search { position: relative; flex: 0 1 360px; min-width: 220px; }
-.search-box {
-  display: flex; align-items: center; gap: 9px; padding: 4px 4px 4px 12px;
-  border-radius: 13px; border: 1px solid var(--border); background: var(--surface);
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-}
-.search-box:focus-within {
-  border-color: var(--brand); background: var(--surface-2);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent);
-}
-.search-box > .ic { font-size: 17px; color: var(--muted); }
-.search-box input {
-  flex: 1; min-width: 0; min-height: 34px; border: 0; outline: 0; background: none; font-size: 14px;
-}
-.search-box input::placeholder { color: var(--muted); }
-.search-submit {
-  min-height: 34px; padding: 0 12px; border: 0; border-radius: 9px; cursor: pointer;
-  background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; font-size: 13px; font-weight: 600;
-}
-.search-results {
-  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 60;
-  margin: 0; padding: 4px 0; list-style: none; overflow: hidden;
-  background: var(--bg-2);
-  border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow);
-}
-.search-results button {
-  width: 100%; min-height: 42px; padding: 0 14px; text-align: left;
-  border: 0; background: none; cursor: pointer; font-size: 14px;
-}
-.search-results button:hover, .search-results button:focus-visible { background: var(--surface-3); }
-.search-results__empty { padding: 10px 14px; color: var(--muted); font-size: 14px; }
-
 .header-actions { display: flex; gap: 8px; }
 
 /* ---------- Subnavegação ---------- */
@@ -76,11 +43,6 @@
   transition: color 0.18s, background 0.18s;
 }
 .subnav a:hover { color: var(--text); background: var(--surface); }
-
-/* Localidades consultadas antes (atalhos) */
-.recent { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.recent__label { font-size: 12.5px; color: var(--muted); }
-.recent ul { gap: 6px; flex-wrap: wrap; }
 
 /* ---------- Agora: cartão principal + medidor ---------- */
 main { padding-bottom: 64px; }
@@ -245,7 +207,6 @@ main { padding-bottom: 64px; }
 }
 @media (max-width: 720px) {
   .brand-sub { display: none; }
-  .search { order: 3; flex: 1 1 100%; }
   .subnav { position: static; }
   .hero, .gauge-card, .card-pad { padding: 18px; }
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }

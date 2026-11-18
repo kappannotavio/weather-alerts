@@ -1,50 +1,58 @@
 /**
  * constants.js
  * Configurações globais e enumerações do sistema Alerta Saúde.
- * Não contém segredos: a API Open-Meteo é pública e não exige chave.
- * Usado por: modelos, repositórios, serviços e controlador.
+ * Não contém segredos: os dados da estação vêm do espelho público do
+ * WIS2 (OMM), que não exige chave de acesso.
+ * Usado por: modelos, repositórios, serviços, controlador e view.
  */
+
+// Estação monitorada: automática do INMET em Santiago/RS.
+// O id WIGOS é o usado pelo INMET nos arquivos do WIS2 (campo CD_WSI do cadastro de estações).
+export const STATION = Object.freeze({
+  stationCode: 'A833',
+  wigosId: '0-76-0-4317400000000441',
+  name: 'Santiago, Rio Grande do Sul',
+  latitude: -29.19167,
+  longitude: -54.88556,
+  utcOffsetHours: -3, // horário de Brasília, sem horário de verão
+});
+
+// Fuso usado para exibir datas e horas na interface (o mesmo da estação)
+export const DISPLAY_TIME_ZONE = 'America/Sao_Paulo';
 
 // Configuração geral da aplicação (congelada para evitar alteração em tempo de execução)
 export const APP_CONFIG = Object.freeze({
   // Prefixo de todas as chaves gravadas no localStorage (versão do formato dos dados)
   STORAGE_NAMESPACE: 'alerta-saude:v1',
 
-  // API de previsão do tempo e geocodificação (Open-Meteo, gratuita e sem chave)
-  WEATHER_API_URL: 'https://api.open-meteo.com/v1/forecast',
-  GEOCODING_API_URL: 'https://geocoding-api.open-meteo.com/v1/search',
+  // Espelho (global cache) do WIS2 mantido pelo Met Office no AWS. Guarda os
+  // arquivos BUFR das últimas ~24 a 48 h e permite leitura direta pelo navegador.
+  // (O servidor do próprio INMET, wis2bra.inmet.gov.br, tem CORS inválido.)
+  WIS2_SYNOP_URL: 'https://wis2globalcache.s3.amazonaws.com/data/br-inmet/data/core/weather/surface-based-observations/synop',
   API_TIMEOUT_MS: 10000,
 
-  // Tempo em que uma leitura climática salva é reaproveitada (cache)
-  WEATHER_CACHE_MINUTES: 15,
+  // Horas para trás procuradas no espelho a cada atualização (só as que faltam no navegador)
+  READINGS_LOOKBACK_HOURS: 36,
 
-  // Quantidade máxima de leituras e de alertas guardados por localidade
-  MAX_CONDITIONS_PER_LOCATION: 24,
+  // Medição mais antiga que isso gera um aviso de que a estação pode estar sem transmitir
+  STALE_READING_MINUTES: 180,
+
+  // Histórico diário: dias anteriores a hoje exibidos na tabela
+  HISTORY_DAYS: 10,
+
+  // Leituras horárias guardadas: hoje + os dias do histórico (24 por dia)
+  MAX_CONDITIONS_PER_LOCATION: 24 * 11,
   MAX_ALERTS_PER_LOCATION: 30,
 
-  // Histórico diário: quantidade de dias anteriores a hoje e tempo de cache.
-  // Fonte provisória: Open-Meteo; a estação INMET A833 (Santiago) depende de token do INMET.
-  HISTORY_DAYS: 10,
-  HISTORY_CACHE_MINUTES: 60,
-
-  // Intervalo de atualização automática da tela
-  REFRESH_INTERVAL_MINUTES: 30,
-
-  // Localização padrão: Santiago/RS (sede da URI Santiago)
-  DEFAULT_LOCATION: Object.freeze({
-    name: 'Santiago, Rio Grande do Sul',
-    latitude: -29.1917,
-    longitude: -54.8672,
-  }),
+  // Intervalo de atualização automática da tela (a estação publica uma medição por hora)
+  REFRESH_INTERVAL_MINUTES: 15,
 });
 
 // Chaves do localStorage (equivalentes às tabelas do Diagrama ER)
 export const STORAGE_KEYS = Object.freeze({
   PREFERENCES: 'preferences',
-  LOCATIONS: 'locations',
   CONDITIONS_PREFIX: 'conditions:', // + id da localidade
   ALERTS_PREFIX: 'alerts:', // + id da localidade
-  HISTORY_PREFIX: 'history:', // + id da localidade
 });
 
 // Temas visuais da página. Sem tema salvo (null), a página segue o tema do sistema.

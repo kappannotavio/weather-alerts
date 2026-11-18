@@ -6,7 +6,7 @@
  * Importa: utilitários dom.js e format.js, TARGET_GROUP_LABELS, TARGET_GROUPS e THEMES.
  */
 import { h, replaceChildren } from '../utils/dom.js';
-import { formatTemperature, formatHumidity, formatTime, formatDateTime, formatDay, formatPrecipitation, describeWeatherCode, describeUvIndex } from '../utils/format.js';
+import { formatTemperature, formatHumidity, formatTime, formatDateTime, formatDay, formatPrecipitation } from '../utils/format.js';
 import { TARGET_GROUP_LABELS, TARGET_GROUPS, THEMES } from '../config/constants.js';
 
 // Comprimento do arco do medidor (2 x pi x raio 70 do círculo no index.html)
@@ -32,17 +32,12 @@ export class HomeView {
     this.groupTabs = root.getElementById('group-tabs');
     this.recommendationList = root.getElementById('recommendation-list');
     this.alertList = root.getElementById('alert-list');
-    this.locationForm = root.getElementById('location-form');
-    this.cityInput = root.getElementById('city-input');
-    this.cityResults = root.getElementById('city-results');
-    this.geoButton = root.getElementById('geo-button');
     this.refreshButton = root.getElementById('refresh-button');
     this.notifyToggle = root.getElementById('notify-toggle');
     this.notifyHint = root.getElementById('notify-hint');
     this.themeToggle = root.getElementById('theme-toggle');
     this.status = root.getElementById('status-message');
     this.toast = root.getElementById('toast');
-    this.recentLocations = root.getElementById('recent-locations');
     this.historyTable = root.getElementById('history-table');
     this.dailyTable = root.getElementById('daily-table');
     this.dailyMeta = root.getElementById('daily-meta');
@@ -53,17 +48,6 @@ export class HomeView {
   }
 
   // ---------- Ligação de eventos (o controlador fornece os handlers) ----------
-
-  onCitySearch(handler) {
-    this.locationForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      handler(this.cityInput.value);
-    });
-  }
-
-  onUseMyLocation(handler) {
-    this.geoButton.addEventListener('click', handler);
-  }
 
   onRefresh(handler) {
     this.refreshButton.addEventListener('click', handler);
@@ -141,7 +125,7 @@ export class HomeView {
     this.riskPanel.dataset.severity = String(riskLevel.severity);
 
     this.placeName.textContent = location.name;
-    this.updatedAt.textContent = `${describeWeatherCode(condition.weatherCode)}, atualizado às ${formatTime(condition.createdAt)}`;
+    this.updatedAt.textContent = `Estação INMET ${location.stationCode}, medição de ${formatDateTime(condition.observedAt)}`;
     this.riskName.textContent = riskLevel.name;
     this.riskDescription.textContent = riskLevel.description;
     this.riskReason.textContent = this.#describeTriggers(condition, triggers);
@@ -154,7 +138,7 @@ export class HomeView {
       reading('Máxima hoje', formatTemperature(condition.maxTemperature)),
       reading('Sensação máx. hoje', formatTemperature(condition.maxApparentTemperature)),
       reading('Umidade mínima hoje', formatHumidity(condition.minHumidity)),
-      reading('Índice UV máximo', describeUvIndex(condition.uvIndexMax)));
+      reading('Chuva hoje', formatPrecipitation(condition.dailyPrecipitation)));
 
     // Medidor: o arco preenche a fração (posição do nível / total de níveis)
     const position = riskLevels.findIndex((level) => level.id === riskLevel.id) + 1;
@@ -206,24 +190,17 @@ export class HomeView {
     }));
   }
 
-  /** Localidades já consultadas neste navegador, como atalhos. */
-  renderRecentLocations(locations, currentLocation, handler) {
-    const others = locations.filter((location) => location.id !== currentLocation.id).slice(0, 5);
-    this.recentLocations.hidden = others.length === 0;
-    replaceChildren(this.recentLocations.querySelector('ul'), others.map((location) => h('li', {},
-      h('button', { className: 'chip chip--button', text: location.name, attrs: { type: 'button' }, on: { click: () => handler(location) } }))));
-  }
-
-  /** Leituras guardadas no navegador para a localidade atual. */
+  /** Medições horárias da estação guardadas no navegador (as 8 mais recentes). */
   renderHistory(conditions, levelsById) {
     if (conditions.length === 0) {
-      replaceChildren(this.historyTable, h('tr', {}, h('td', { className: 'empty', text: 'Nenhuma leitura salva.', attrs: { colspan: 4 } })));
+      replaceChildren(this.historyTable, h('tr', {}, h('td', { className: 'empty', text: 'Nenhuma medição salva.', attrs: { colspan: 5 } })));
       return;
     }
     replaceChildren(this.historyTable, conditions.slice(0, 8).map((condition) => {
       const level = levelsById.get(condition.riskLevelId);
       return h('tr', {},
-        h('td', { text: formatDateTime(condition.createdAt) }),
+        h('td', { text: formatDateTime(condition.observedAt) }),
+        h('td', { text: formatTemperature(condition.temperature) }),
         h('td', { text: formatTemperature(condition.apparentTemperature) }),
         h('td', { text: formatHumidity(condition.humidity) }),
         h('td', {}, h('span', { className: 'lvl-tag lvl-text', text: level?.name ?? '—', style: { '--lvl': level?.color ?? '#64748b' } })));
@@ -239,22 +216,23 @@ export class HomeView {
   }
 
   /** Resumo diário dos últimos dias, com o nível de risco de cada dia. */
-  renderDailyHistory({ fetchedAt, days }, levelsById) {
+  renderDailyHistory({ days, readingsCount }, levelsById) {
     this.dailyTable.closest('table').removeAttribute('aria-busy');
-    this.dailyMeta.textContent = `Consultado às ${formatTime(fetchedAt)}.`;
+    this.dailyMeta.textContent = `Calculado com ${readingsCount} medições horárias salvas neste navegador.`;
     if (days.length === 0) {
-      this.#renderDailyMessage('Nenhum dado disponível para os últimos dias.');
+      this.#renderDailyMessage('Ainda não há dias completos salvos. O histórico se forma conforme o app é usado.');
       return;
     }
     replaceChildren(this.dailyTable, days.map((day) => {
       const level = levelsById.get(day.riskLevelId);
       return h('tr', {},
         h('td', { text: formatDay(day.date) }),
-        h('td', { text: describeWeatherCode(day.weatherCode) }),
         h('td', { text: `${formatTemperature(day.minTemperature)} / ${formatTemperature(day.maxTemperature)}` }),
         h('td', { text: formatTemperature(day.maxApparentTemperature) }),
         h('td', { text: formatHumidity(day.minHumidity) }),
         h('td', { text: formatPrecipitation(day.precipitation) }),
+        // Horas medidas: dia com poucas horas pode ter máxima ou mínima incompleta
+        h('td', { text: `${day.readingsCount} de 24` }),
         h('td', {}, h('span', { className: 'lvl-tag lvl-text', text: level?.name ?? '—', style: { '--lvl': level?.color ?? '#64748b' } })));
     }));
   }
@@ -267,22 +245,6 @@ export class HomeView {
 
   #renderDailyMessage(message) {
     replaceChildren(this.dailyTable, h('tr', {}, h('td', { className: 'empty', text: message, attrs: { colspan: 7 } })));
-  }
-
-  /** Sugestões de cidades encontradas na busca. */
-  renderCityResults(cities, handler) {
-    if (cities.length === 0) {
-      replaceChildren(this.cityResults, h('li', { className: 'search-results__empty', text: 'Nenhuma cidade encontrada.' }));
-    } else {
-      replaceChildren(this.cityResults, cities.map((city) => h('li', {},
-        h('button', { text: city.name, attrs: { type: 'button' }, on: { click: () => handler(city) } }))));
-    }
-    this.cityResults.hidden = false;
-  }
-
-  hideCityResults() {
-    this.cityResults.hidden = true;
-    this.cityInput.value = '';
   }
 
   /**
@@ -317,6 +279,6 @@ export class HomeView {
     const parts = [];
     if (triggers.includes('temperature')) parts.push(`sensação térmica de até ${formatTemperature(condition.getEvaluatedTemperature())}`);
     if (triggers.includes('humidity')) parts.push(`umidade do ar de até ${formatHumidity(condition.getEvaluatedHumidity())}`);
-    return `Motivo: ${parts.join(' e ')} prevista para hoje.`;
+    return `Motivo: ${parts.join(' e ')} registrada hoje pela estação.`;
   }
 }

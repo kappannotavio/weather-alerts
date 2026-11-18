@@ -1,12 +1,16 @@
 /**
  * DailyClimate.js
- * Resumo climático de um dia já encerrado de uma localidade (máximas,
- * mínimas, chuva e vento), usado no histórico dos últimos dias.
+ * Resumo de um dia já encerrado, calculado a partir das medições
+ * horárias da estação gravadas no navegador (máximas, mínimas, menor
+ * umidade e chuva acumulada), usado no histórico dos últimos dias.
  * Tem a mesma interface de avaliação da ClimateCondition
  * (getEvaluatedTemperature/getEvaluatedHumidity), então o RiskClassifier
  * classifica cada dia com a mesma escala de risco.
- * Não estende Entity: o histórico é gravado em bloco, como cache da API.
+ * Não é gravado: é recalculado a partir das leituras sempre que exibido.
  */
+
+const numbers = (values) => values.filter((value) => typeof value === 'number');
+
 export class DailyClimate {
   constructor({
     locationId = null,
@@ -16,63 +20,53 @@ export class DailyClimate {
     maxApparentTemperature = null,
     minHumidity = null,
     precipitation = null,
-    maxWindSpeed = null,
-    uvIndexMax = null,
-    weatherCode = null,
+    readingsCount = 0,
     riskLevelId = null,
   } = {}) {
     this.locationId = locationId; // FK para Location
     this.date = date; // dia no fuso da localidade, "AAAA-MM-DD"
     this.maxTemperature = maxTemperature; // temperatura máxima (°C)
     this.minTemperature = minTemperature; // temperatura mínima (°C)
-    this.maxApparentTemperature = maxApparentTemperature; // sensação térmica máxima (°C)
-    this.minHumidity = minHumidity; // umidade relativa mínima (%)
+    this.maxApparentTemperature = maxApparentTemperature; // maior sensação térmica (°C)
+    this.minHumidity = minHumidity; // menor umidade relativa (%)
     this.precipitation = precipitation; // chuva acumulada no dia (mm)
-    this.maxWindSpeed = maxWindSpeed; // vento máximo a 10 m (km/h)
-    this.uvIndexMax = uvIndexMax; // índice UV máximo
-    this.weatherCode = weatherCode; // código WMO predominante do dia
+    this.readingsCount = readingsCount; // horas com medição (de 24)
     this.riskLevelId = riskLevelId; // código do nível de risco (catálogo no código)
   }
 
   /**
-   * Cria a lista de dias a partir da resposta "daily" da API Open-Meteo,
-   * do dia mais recente para o mais antigo.
-   * Método de fábrica (Factory Method): isola o formato da API do domínio.
-   * @param {object} json - resposta de /v1/forecast com past_days
-   * @param {import('./Location.js').Location} location
+   * Cria o resumo de um dia a partir das medições horárias desse dia.
+   * Método de fábrica (Factory Method).
+   * @param {string} date - "AAAA-MM-DD" no fuso da localidade
+   * @param {import('./ClimateCondition.js').ClimateCondition[]} readings - medições do dia
+   * @param {string} locationId
    */
-  static listFromApiResponse(json, location) {
-    const daily = json?.daily;
-    if (!daily || !Array.isArray(daily.time)) {
-      throw new Error('Resposta da API de histórico incompleta.');
-    }
-    const valueAt = (key, index) => (typeof daily[key]?.[index] === 'number' ? daily[key][index] : null);
-
-    return daily.time
-      .map((date, index) => new DailyClimate({
-        locationId: location.id,
-        date,
-        maxTemperature: valueAt('temperature_2m_max', index),
-        minTemperature: valueAt('temperature_2m_min', index),
-        maxApparentTemperature: valueAt('apparent_temperature_max', index),
-        minHumidity: valueAt('relative_humidity_2m_min', index),
-        precipitation: valueAt('precipitation_sum', index),
-        maxWindSpeed: valueAt('wind_speed_10m_max', index),
-        uvIndexMax: valueAt('uv_index_max', index),
-        weatherCode: valueAt('weather_code', index),
-      }))
-      // Dias sem temperatura nem umidade não podem ser classificados
-      .filter((day) => day.maxTemperature !== null || day.minHumidity !== null)
-      .reverse();
+  static fromReadings(date, readings, locationId) {
+    // Máxima/mínima da hora são mais precisas que o valor instantâneo, quando existem
+    const highs = numbers(readings.flatMap((reading) => [reading.hourMaxTemperature, reading.temperature]));
+    const lows = numbers(readings.flatMap((reading) => [reading.hourMinTemperature, reading.temperature]));
+    const apparent = numbers(readings.map((reading) => reading.apparentTemperature));
+    const humidity = numbers(readings.map((reading) => reading.humidity));
+    const rain = numbers(readings.map((reading) => reading.precipitation));
+    return new DailyClimate({
+      locationId,
+      date,
+      maxTemperature: highs.length > 0 ? Math.max(...highs) : null,
+      minTemperature: lows.length > 0 ? Math.min(...lows) : null,
+      maxApparentTemperature: apparent.length > 0 ? Math.max(...apparent) : null,
+      minHumidity: humidity.length > 0 ? Math.min(...humidity) : null,
+      precipitation: rain.length > 0 ? Number(rain.reduce((sum, value) => sum + value, 0).toFixed(1)) : null,
+      readingsCount: readings.length,
+    });
   }
 
   /** Temperatura usada na classificação: a pior entre a máxima e a sensação máxima do dia. */
   getEvaluatedTemperature() {
-    const values = [this.maxApparentTemperature, this.maxTemperature].filter((value) => typeof value === 'number');
+    const values = numbers([this.maxApparentTemperature, this.maxTemperature]);
     return values.length > 0 ? Math.max(...values) : -Infinity;
   }
 
-  /** Umidade usada na classificação: a mínima do dia. */
+  /** Umidade usada na classificação: a menor do dia. */
   getEvaluatedHumidity() {
     return typeof this.minHumidity === 'number' ? this.minHumidity : Infinity;
   }
@@ -80,21 +74,5 @@ export class DailyClimate {
   /** Associa o dia ao nível de risco calculado pelo RiskClassifier. */
   assignRiskLevel(riskLevel) {
     this.riskLevelId = riskLevel.id;
-  }
-
-  toRecord() {
-    return {
-      locationId: this.locationId,
-      date: this.date,
-      maxTemperature: this.maxTemperature,
-      minTemperature: this.minTemperature,
-      maxApparentTemperature: this.maxApparentTemperature,
-      minHumidity: this.minHumidity,
-      precipitation: this.precipitation,
-      maxWindSpeed: this.maxWindSpeed,
-      uvIndexMax: this.uvIndexMax,
-      weatherCode: this.weatherCode,
-      riskLevelId: this.riskLevelId,
-    };
   }
 }

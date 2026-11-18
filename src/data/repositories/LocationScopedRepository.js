@@ -48,12 +48,24 @@ export class LocationScopedRepository {
    * e descarta os registros mais antigos acima do limite.
    */
   save(entity) {
-    entity.markPersisted();
-    const others = this.#readRecords(entity.locationId).filter((record) => record.id !== entity.id);
-    const records = [...others, entity.toRecord()]
+    this.saveAll(entity.locationId, [entity]);
+    return entity;
+  }
+
+  /**
+   * Grava várias entidades da mesma localidade com uma única escrita
+   * no localStorage (upsert pelo id, mantendo o limite de registros).
+   * @param {string} locationId
+   * @param {Array<object>} entities
+   */
+  saveAll(locationId, entities) {
+    entities.forEach((entity) => entity.markPersisted());
+    const ids = new Set(entities.map((entity) => entity.id));
+    const others = this.#readRecords(locationId).filter((record) => !ids.has(record.id));
+    const records = [...others, ...entities.map((entity) => entity.toRecord())]
       .sort((a, b) => String(b[this.orderField]).localeCompare(String(a[this.orderField])))
       .slice(0, this.maxItems);
-    this.storage.write(this.#key(entity.locationId), records);
-    return entity;
+    this.storage.write(this.#key(locationId), records);
+    return entities;
   }
 }

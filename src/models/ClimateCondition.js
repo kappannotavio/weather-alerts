@@ -1,99 +1,127 @@
 /**
  * ClimateCondition.js
- * Entidade Condição Climática: uma leitura de temperatura e umidade
- * de uma localidade, obtida da API Open-Meteo e gravada no
- * localStorage (histórico + cache). Guarda o nível de risco classificado.
- * Importa: Entity (classe base).
+ * Entidade Condição Climática: a medição de uma hora da estação
+ * automática do INMET (temperatura, umidade, orvalho, pressão e chuva),
+ * obtida no WIS2 e gravada no localStorage. Guarda também o resumo do
+ * dia local até aquela hora (máximas, mínima de umidade e chuva
+ * acumulada) e o nível de risco classificado.
+ * Importa: Entity (classe base) e computeHeatIndex (utils/heatIndex.js).
  */
 import { Entity } from './Entity.js';
+import { computeHeatIndex } from '../utils/heatIndex.js';
 
 export class ClimateCondition extends Entity {
   constructor({
     locationId = null,
+    observedAt = null,
     temperature = null,
     apparentTemperature = null,
     humidity = null,
+    dewPoint = null,
+    pressure = null,
+    precipitation = null,
+    hourMaxTemperature = null,
+    hourMinTemperature = null,
     maxTemperature = null,
     maxApparentTemperature = null,
     minHumidity = null,
-    uvIndexMax = null,
-    weatherCode = null,
-    observedAt = null,
+    dailyPrecipitation = null,
     riskLevelId = null,
     ...base
   } = {}) {
-    super(base);
+    super({ ...base, id: base.id ?? ClimateCondition.buildId(locationId, observedAt) });
     this.locationId = locationId; // FK para Location
-    this.temperature = temperature; // temperatura do ar atual (°C)
-    this.apparentTemperature = apparentTemperature; // sensação térmica atual (°C)
-    this.humidity = humidity; // umidade relativa atual (%)
-    this.maxTemperature = maxTemperature; // máxima prevista para hoje (°C)
-    this.maxApparentTemperature = maxApparentTemperature; // sensação máxima prevista (°C)
-    this.minHumidity = minHumidity; // umidade mínima prevista para hoje (%)
-    this.uvIndexMax = uvIndexMax; // índice UV máximo previsto
-    this.weatherCode = weatherCode; // código WMO do tempo atual
-    this.observedAt = observedAt; // horário da leitura informado pela API
+    this.observedAt = observedAt; // hora da medição (UTC, ISO 8601)
+    // Medição da hora
+    this.temperature = temperature; // temperatura do ar (°C)
+    this.apparentTemperature = apparentTemperature; // sensação térmica pelo índice de calor (°C)
+    this.humidity = humidity; // umidade relativa (%)
+    this.dewPoint = dewPoint; // ponto de orvalho (°C)
+    this.pressure = pressure; // pressão na estação (hPa)
+    this.precipitation = precipitation; // chuva na última hora (mm)
+    this.hourMaxTemperature = hourMaxTemperature; // máxima dentro da hora (°C)
+    this.hourMinTemperature = hourMinTemperature; // mínima dentro da hora (°C)
+    // Resumo do dia local até esta hora (calculado pelo StationService)
+    this.maxTemperature = maxTemperature; // máxima do dia (°C)
+    this.maxApparentTemperature = maxApparentTemperature; // maior sensação do dia (°C)
+    this.minHumidity = minHumidity; // menor umidade do dia (%)
+    this.dailyPrecipitation = dailyPrecipitation; // chuva acumulada no dia (mm)
     this.riskLevelId = riskLevelId; // código do nível de risco (catálogo no código)
   }
 
   /**
-   * Cria uma condição a partir da resposta JSON da API Open-Meteo.
-   * Método de fábrica (Factory Method): isola o formato da API do domínio.
-   * @param {object} json - resposta de /v1/forecast
+   * Id fixo por localidade e hora: a mesma medição baixada de novo
+   * substitui a anterior em vez de duplicar (upsert no repositório).
+   */
+  static buildId(locationId, observedAt) {
+    return locationId && observedAt ? `${locationId}@${observedAt}` : null;
+  }
+
+  /**
+   * Cria a condição a partir de uma observação SYNOP já decodificada.
+   * Método de fábrica (Factory Method): isola o formato do WIS2 do domínio.
+   * A sensação térmica não é medida pela estação: é calculada pelo
+   * índice de calor da NOAA (temperatura + umidade).
+   * @param {ReturnType<import('../data/bufr/synopObservation.js').extractSynopObservation>} observation
    * @param {import('./Location.js').Location} location
    */
-  static fromApiResponse(json, location) {
-    const current = json?.current;
-    const daily = json?.daily;
-    // Valida o mínimo necessário: sem temperatura e umidade não há classificação
-    if (!current || typeof current.temperature_2m !== 'number' || typeof current.relative_humidity_2m !== 'number') {
-      throw new Error('Resposta da API de clima incompleta.');
+  static fromObservation(observation, location) {
+    if (typeof observation?.temperature !== 'number' || typeof observation?.humidity !== 'number') {
+      throw new Error('Medição da estação sem temperatura ou umidade.');
     }
-    // Lê o primeiro (e único) dia da previsão diária, quando disponível
-    const firstDay = (key) => (Array.isArray(daily?.[key]) && typeof daily[key][0] === 'number' ? daily[key][0] : null);
-
     return new ClimateCondition({
       locationId: location.id,
-      temperature: current.temperature_2m,
-      apparentTemperature: current.apparent_temperature ?? current.temperature_2m,
-      humidity: current.relative_humidity_2m,
-      maxTemperature: firstDay('temperature_2m_max'),
-      maxApparentTemperature: firstDay('apparent_temperature_max'),
-      minHumidity: firstDay('relative_humidity_2m_min'),
-      uvIndexMax: firstDay('uv_index_max'),
-      weatherCode: current.weather_code ?? null,
-      observedAt: current.time ?? new Date().toISOString(),
+      observedAt: observation.observedAt,
+      temperature: observation.temperature,
+      apparentTemperature: computeHeatIndex(observation.temperature, observation.humidity),
+      humidity: observation.humidity,
+      dewPoint: observation.dewPoint,
+      pressure: observation.pressure,
+      precipitation: observation.precipitation,
+      hourMaxTemperature: observation.maxTemperature,
+      hourMinTemperature: observation.minTemperature,
     });
   }
 
   /**
+   * Grava o resumo do dia local até esta hora.
+   * @param {{maxTemperature: number|null, maxApparentTemperature: number|null, minHumidity: number|null, dailyPrecipitation: number|null}} summary
+   */
+  applyDailySummary({ maxTemperature, maxApparentTemperature, minHumidity, dailyPrecipitation }) {
+    this.maxTemperature = maxTemperature;
+    this.maxApparentTemperature = maxApparentTemperature;
+    this.minHumidity = minHumidity;
+    this.dailyPrecipitation = dailyPrecipitation;
+  }
+
+  /**
    * Temperatura usada na classificação de risco: a pior entre a
-   * temperatura atual, a sensação térmica atual e a sensação máxima do dia.
+   * temperatura, a sensação desta hora e a maior sensação do dia.
    */
   getEvaluatedTemperature() {
     const values = [this.apparentTemperature, this.maxApparentTemperature, this.temperature]
       .filter((value) => typeof value === 'number');
-    return Math.max(...values);
+    return values.length > 0 ? Math.max(...values) : -Infinity;
   }
 
   /**
    * Umidade usada na classificação de risco: a pior (menor) entre a
-   * umidade atual e a mínima prevista para o dia.
+   * umidade desta hora e a menor umidade do dia.
    */
   getEvaluatedHumidity() {
     const values = [this.humidity, this.minHumidity].filter((value) => typeof value === 'number');
-    return Math.min(...values);
+    return values.length > 0 ? Math.min(...values) : Infinity;
   }
 
   /**
-   * Verifica se a leitura está velha demais para ser reaproveitada (cache).
+   * Indica se a medição é antiga demais para representar o momento
+   * (ex.: estação sem transmitir há algumas horas).
    * @param {number} maxAgeMinutes
    * @param {Date} now - data de referência (parâmetro facilita testes)
    */
   isStale(maxAgeMinutes, now = new Date()) {
-    if (!this.createdAt) return true;
-    const ageMs = now.getTime() - new Date(this.createdAt).getTime();
-    return ageMs > maxAgeMinutes * 60 * 1000;
+    if (!this.observedAt) return true;
+    return now.getTime() - new Date(this.observedAt).getTime() > maxAgeMinutes * 60 * 1000;
   }
 
   /** Associa a condição ao nível de risco calculado pelo RiskClassifier. */
@@ -105,15 +133,19 @@ export class ClimateCondition extends Entity {
     return {
       ...super.toRecord(),
       locationId: this.locationId,
+      observedAt: this.observedAt,
       temperature: this.temperature,
       apparentTemperature: this.apparentTemperature,
       humidity: this.humidity,
+      dewPoint: this.dewPoint,
+      pressure: this.pressure,
+      precipitation: this.precipitation,
+      hourMaxTemperature: this.hourMaxTemperature,
+      hourMinTemperature: this.hourMinTemperature,
       maxTemperature: this.maxTemperature,
       maxApparentTemperature: this.maxApparentTemperature,
       minHumidity: this.minHumidity,
-      uvIndexMax: this.uvIndexMax,
-      weatherCode: this.weatherCode,
-      observedAt: this.observedAt,
+      dailyPrecipitation: this.dailyPrecipitation,
       riskLevelId: this.riskLevelId,
     };
   }
