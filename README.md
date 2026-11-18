@@ -55,6 +55,20 @@ A documentação do trabalho (DOCX/PDF e diagramas UML) é entregue à parte e n
 
 O espelho guarda cerca de 24 a 48 horas. Por isso, o **histórico dos últimos 10 dias** é calculado com as medições já salvas no navegador e se completa conforme o app é usado. A coluna "Horas medidas" mostra quantas horas de cada dia estão salvas.
 
+### Comparando com o site do INMET
+
+As tabelas e grades do INMET (`tempo.inmet.gov.br/TabelaEstacoes/A833` e `mapas.inmet.gov.br`) mostram as horas em **UTC**, enquanto o app mostra o **horário de Brasília** (UTC−3), que é o horário local de Santiago. Por isso a mesma medição aparece com 3 horas de diferença:
+
+| App (Brasília) | INMET (UTC) |
+|---|---|
+| 09:00 | 12h |
+| 10:00 | 13h |
+| 21:00 | 00h do dia seguinte |
+
+O mesmo vale para o "dia": o resumo de um dia no app vai de 0h a 23h de Brasília (03h UTC até 02h UTC do dia seguinte).
+
+Na tabela "Últimas medições" a temperatura aparece com uma casa decimal, como no INMET. Nos cartões principais, ela é arredondada para o inteiro mais próximo (23,4 °C → 23 °C).
+
 ## Dados salvos no navegador
 
 | Chave | Conteúdo |
