@@ -201,6 +201,27 @@ main { padding-bottom: 64px; }
 .footer-note { font-size: 13px; color: var(--muted); }
 .footer-note b { color: var(--text-2); }
 
+/* Créditos: logo da URI Santiago + autores, separados das notas por uma linha */
+.footer-credits {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--border-soft);
+}
+/*
+ * O PNG do logo tem fundo transparente. Usado como máscara, só o desenho
+ * fica visível e recebe a cor do texto do tema (escura no claro, clara no
+ * escuro). Arquivo em 280 x 363 px (4x o tamanho exibido, nítido em telas de alta densidade).
+ */
+.footer-logo {
+  flex: none; width: 62px; height: 80px;
+  background-color: var(--text-2);
+  -webkit-mask: url('../img/logo-uri-santiago.png') center / contain no-repeat;
+  mask: url('../img/logo-uri-santiago.png') center / contain no-repeat;
+}
+.footer-credits__text { display: flex; flex-direction: column; gap: 4px; }
+.footer-authors { font-size: 13px; color: var(--muted); }
+.footer-copyright { font-size: 12px; color: var(--muted); }
+.footer-authors b { color: var(--text-2); }
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 1000px) {
   .grid-top, .grid-2 { grid-template-columns: 1fr; }
