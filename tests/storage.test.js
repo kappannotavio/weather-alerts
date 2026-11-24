@@ -7,7 +7,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BrowserStorage } from '../src/data/BrowserStorage.js';
-import { LocationRepository } from '../src/data/repositories/LocationRepository.js';
 import { PreferencesRepository } from '../src/data/repositories/PreferencesRepository.js';
 import { ClimateConditionRepository } from '../src/data/repositories/ClimateConditionRepository.js';
 import { AlertRepository } from '../src/data/repositories/AlertRepository.js';
@@ -43,35 +42,30 @@ test('BrowserStorage converte falha de gravação em StorageError', () => {
   assert.throws(() => new BrowserStorage(blocked).write('x', 1), StorageError);
 });
 
-test('PreferencesService: primeiro acesso grava Santiago e troca de localidade é lembrada', () => {
-  const storage = new BrowserStorage(new MemoryStorage());
-  const service = new PreferencesService(new PreferencesRepository(storage), new LocationRepository(storage));
-  assert.equal(service.getCurrentLocation().id, '-29.19_-54.87');
-  service.changeLocation(new Location({ name: 'Cuiabá, Mato Grosso', latitude: -15.6, longitude: -56.1 }));
-  assert.equal(service.getCurrentLocation().name, 'Cuiabá, Mato Grosso');
-  assert.equal(service.listRecentLocations().length, 2);
-});
-
 test('PreferencesService: tema escolhido fica gravado no localStorage', () => {
   const memory = new MemoryStorage();
   const storage = new BrowserStorage(memory);
-  const service = new PreferencesService(new PreferencesRepository(storage), new LocationRepository(storage));
+  const service = new PreferencesService(new PreferencesRepository(storage));
   service.setTheme('dark');
   assert.equal(JSON.parse(memory.getItem('alerta-saude:v1:preferences')).theme, 'dark');
   assert.equal(service.getPreferences().theme, 'dark');
 });
 
-test('ClimateConditionRepository guarda leituras separadas por localidade e respeita o limite', () => {
+test('ClimateConditionRepository guarda medições por localidade, ordena pela hora e respeita o limite', () => {
   const repository = new ClimateConditionRepository(new BrowserStorage(new MemoryStorage()));
   const location = santiago();
+  // Uma medição por hora, gravadas fora de ordem e em lote
+  const conditions = [];
   for (let i = 0; i < APP_CONFIG.MAX_CONDITIONS_PER_LOCATION + 5; i++) {
-    const condition = new ClimateCondition({ locationId: location.id, temperature: 20 + i, humidity: 50 });
-    condition.createdAt = new Date(Date.UTC(2026, 10, 4, 0, i)).toISOString();
-    repository.save(condition);
+    const observedAt = new Date(Date.UTC(2026, 10, 1, i)).toISOString();
+    conditions.push(new ClimateCondition({ locationId: location.id, observedAt, temperature: 20 + i, humidity: 50 }));
   }
-  repository.save(new ClimateCondition({ locationId: 'outra', temperature: 30, humidity: 40 }));
+  repository.saveAll(location.id, conditions.reverse());
+  // Mesma hora gravada de novo substitui em vez de duplicar
+  repository.save(new ClimateCondition({ ...conditions[0].toRecord(), temperature: 99 }));
+  repository.save(new ClimateCondition({ locationId: 'outra', observedAt: '2026-11-01T00:00:00.000Z', temperature: 30, humidity: 40 }));
   assert.equal(repository.findByLocation(location.id).length, APP_CONFIG.MAX_CONDITIONS_PER_LOCATION);
-  assert.equal(repository.findLatestByLocation(location.id).temperature, 20 + APP_CONFIG.MAX_CONDITIONS_PER_LOCATION + 4);
+  assert.equal(repository.findLatestByLocation(location.id).temperature, 99);
   assert.equal(repository.findByLocation('outra').length, 1);
 });
 

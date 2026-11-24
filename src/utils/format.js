@@ -1,21 +1,42 @@
 /**
  * format.js
  * Formatação de valores para exibição em português do Brasil
- * (Intl API do navegador) e tradução dos códigos de tempo WMO
- * retornados pela API Open-Meteo.
+ * (Intl API do navegador). Datas e horas saem sempre no fuso da
+ * estação (DISPLAY_TIME_ZONE), mesmo que o computador use outro fuso.
+ * Importa: DISPLAY_TIME_ZONE (constants.js).
  */
+import { DISPLAY_TIME_ZONE } from '../config/constants.js';
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-const timeFormatter = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: DISPLAY_TIME_ZONE });
+const timeFormatter = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: DISPLAY_TIME_ZONE });
+// Dia "AAAA-MM-DD" já é local: formata em UTC para não deslocar a data
+const dayFormatter = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 
-/** Formata temperatura: 31.6 -> "32 °C". */
-export function formatTemperature(value) {
-  return typeof value === 'number' ? `${Math.round(value)} °C` : '—';
+/**
+ * Formata temperatura: 31.6 -> "32 °C" ou, com decimals = 1, "31,6 °C"
+ * (mesma precisão da tabela de dados do INMET).
+ * @param {number|null} value
+ * @param {number} decimals - casas decimais (padrão 0)
+ */
+export function formatTemperature(value, decimals = 0) {
+  if (typeof value !== 'number') return '—';
+  const text = value.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return `${text} °C`;
 }
 
 /** Formata umidade relativa: 18.2 -> "18%". */
 export function formatHumidity(value) {
   return typeof value === 'number' ? `${Math.round(value)}%` : '—';
+}
+
+/** Formata chuva acumulada: 2.2 -> "2,2 mm". */
+export function formatPrecipitation(value) {
+  return typeof value === 'number' ? `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mm` : '—';
+}
+
+/** Formata um dia "AAAA-MM-DD": "qua., 11/11". */
+export function formatDay(dateString) {
+  return dateString ? dayFormatter.format(new Date(`${dateString}T12:00:00Z`)) : '—';
 }
 
 /** Formata data e hora: "04/11/2026 14:30". */
@@ -34,32 +55,4 @@ export function toDateTimeLocalValue(isoString) {
   const date = new Date(isoString);
   const offsetMs = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-}
-
-// Códigos meteorológicos WMO (documentação Open-Meteo) agrupados em descrições curtas
-const WEATHER_CODES = [
-  [[0], 'Céu limpo'],
-  [[1, 2], 'Parcialmente nublado'],
-  [[3], 'Nublado'],
-  [[45, 48], 'Nevoeiro'],
-  [[51, 53, 55, 56, 57], 'Garoa'],
-  [[61, 63, 65, 66, 67, 80, 81, 82], 'Chuva'],
-  [[71, 73, 75, 77, 85, 86], 'Neve'],
-  [[95, 96, 99], 'Trovoadas'],
-];
-
-/** Traduz o código WMO em descrição do tempo. */
-export function describeWeatherCode(code) {
-  const match = WEATHER_CODES.find(([codes]) => codes.includes(code));
-  return match ? match[1] : 'Tempo indisponível';
-}
-
-/** Classifica o índice UV conforme a escala da OMS. */
-export function describeUvIndex(value) {
-  if (typeof value !== 'number') return '—';
-  if (value < 3) return `${Math.round(value)} baixo`;
-  if (value < 6) return `${Math.round(value)} moderado`;
-  if (value < 8) return `${Math.round(value)} alto`;
-  if (value < 11) return `${Math.round(value)} muito alto`;
-  return `${Math.round(value)} extremo`;
 }

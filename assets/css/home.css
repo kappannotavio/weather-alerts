@@ -26,39 +26,6 @@
 .brand-name { font-family: var(--font-display); font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
 .brand-sub { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 
-/* Busca de cidade */
-.search { position: relative; flex: 0 1 360px; min-width: 220px; }
-.search-box {
-  display: flex; align-items: center; gap: 9px; padding: 4px 4px 4px 12px;
-  border-radius: 13px; border: 1px solid var(--border); background: var(--surface);
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-}
-.search-box:focus-within {
-  border-color: var(--brand); background: var(--surface-2);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent);
-}
-.search-box > .ic { font-size: 17px; color: var(--muted); }
-.search-box input {
-  flex: 1; min-width: 0; min-height: 34px; border: 0; outline: 0; background: none; font-size: 14px;
-}
-.search-box input::placeholder { color: var(--muted); }
-.search-submit {
-  min-height: 34px; padding: 0 12px; border: 0; border-radius: 9px; cursor: pointer;
-  background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; font-size: 13px; font-weight: 600;
-}
-.search-results {
-  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 60;
-  margin: 0; padding: 4px 0; list-style: none; overflow: hidden;
-  background: var(--bg-2);
-  border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow);
-}
-.search-results button {
-  width: 100%; min-height: 42px; padding: 0 14px; text-align: left;
-  border: 0; background: none; cursor: pointer; font-size: 14px;
-}
-.search-results button:hover, .search-results button:focus-visible { background: var(--surface-3); }
-.search-results__empty { padding: 10px 14px; color: var(--muted); font-size: 14px; }
-
 .header-actions { display: flex; gap: 8px; }
 
 /* ---------- Subnavegação ---------- */
@@ -76,11 +43,6 @@
   transition: color 0.18s, background 0.18s;
 }
 .subnav a:hover { color: var(--text); background: var(--surface); }
-
-/* Localidades consultadas antes (atalhos) */
-.recent { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.recent__label { font-size: 12.5px; color: var(--muted); }
-.recent ul { gap: 6px; flex-wrap: wrap; }
 
 /* ---------- Agora: cartão principal + medidor ---------- */
 main { padding-bottom: 64px; }
@@ -178,6 +140,20 @@ main { padding-bottom: 64px; }
   border-radius: var(--r-md); border: 1px solid var(--border-soft); background: var(--surface);
 }
 .care-card p { font-size: 14px; color: var(--text-2); }
+/* Faixa com a ilustração da recomendação (assets/img/care) */
+.care-card__art {
+  display: grid; place-items: center; height: 132px; margin: -19px -19px 6px;
+  border-radius: var(--r-md) var(--r-md) 0 0; border-bottom: 1px solid var(--border-soft);
+  background:
+    radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 70%),
+    linear-gradient(135deg, color-mix(in srgb, var(--brand) 8%, transparent), color-mix(in srgb, var(--brand-2) 8%, transparent));
+}
+.care-card__art img { width: 112px; height: 112px; transition: transform 0.25s ease; }
+.care-card:hover .care-card__art img { transform: translateY(-3px) scale(1.04); }
+@media (prefers-reduced-motion: reduce) {
+  .care-card__art img { transition: none; }
+  .care-card:hover .care-card__art img { transform: none; }
+}
 .care-card__group {
   align-self: flex-start; margin-top: 4px; padding: 3px 9px; border-radius: 8px;
   font-size: 11.5px; font-weight: 600; color: var(--muted);
@@ -213,6 +189,10 @@ main { padding-bottom: 64px; }
 .history td:first-child { white-space: nowrap; }
 .history tbody tr:last-child td { border-bottom: 0; }
 
+/* ---------- Histórico dos últimos dias ---------- */
+.daily-card { margin-top: 16px; }
+.daily-card .history td { white-space: nowrap; }
+
 /* ---------- Rodapé ---------- */
 .site-footer {
   display: flex; flex-direction: column; gap: 10px; margin-top: 44px; padding: 24px;
@@ -221,13 +201,33 @@ main { padding-bottom: 64px; }
 .footer-note { font-size: 13px; color: var(--muted); }
 .footer-note b { color: var(--text-2); }
 
+/* Créditos: logo da URI Santiago + autores, separados das notas por uma linha */
+.footer-credits {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--border-soft);
+}
+/*
+ * O PNG do logo tem fundo transparente. Usado como máscara, só o desenho
+ * fica visível e recebe a cor do texto do tema (escura no claro, clara no
+ * escuro). Arquivo em 280 x 363 px (4x o tamanho exibido, nítido em telas de alta densidade).
+ */
+.footer-logo {
+  flex: none; width: 62px; height: 80px;
+  background-color: var(--text-2);
+  -webkit-mask: url('../img/logo-uri-santiago.png') center / contain no-repeat;
+  mask: url('../img/logo-uri-santiago.png') center / contain no-repeat;
+}
+.footer-credits__text { display: flex; flex-direction: column; gap: 4px; }
+.footer-authors { font-size: 13px; color: var(--muted); }
+.footer-copyright { font-size: 12px; color: var(--muted); }
+.footer-authors b { color: var(--text-2); }
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 1000px) {
   .grid-top, .grid-2 { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
   .brand-sub { display: none; }
-  .search { order: 3; flex: 1 1 100%; }
   .subnav { position: static; }
   .hero, .gauge-card, .card-pad { padding: 18px; }
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }

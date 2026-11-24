@@ -41,12 +41,13 @@ test('prevalece o nível mais grave entre calor e umidade', () => {
   assert.equal(classifier.classify(condition(33, 10)).riskLevel.name, 'Emergência');
 });
 
-test('usa a previsão do dia quando ela é pior que o valor atual', () => {
-  const morning = new ClimateCondition({
+test('usa o pior valor medido no dia quando ele é pior que o da hora atual', () => {
+  // Fim de tarde: a hora atual já esfriou, mas o dia teve sensação de 38 °C
+  const evening = new ClimateCondition({
     locationId: 'teste', temperature: 24, apparentTemperature: 25, humidity: 70,
     maxApparentTemperature: 38, minHumidity: 45,
   });
-  assert.equal(classifier.classify(morning).riskLevel.name, 'Alerta');
+  assert.equal(classifier.classify(evening).riskLevel.name, 'Alerta');
 });
 
 test('não aceita catálogo vazio', () => {

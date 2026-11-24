@@ -12,7 +12,7 @@ export class AppError extends Error {
   }
 }
 
-/** Falha em serviço externo (API de clima, geocodificação, geolocalização, rede). */
+/** Falha em serviço externo (dados da estação no WIS2, rede). */
 export class ExternalServiceError extends AppError {}
 
 /** Falha ao gravar no armazenamento do navegador (bloqueado ou sem espaço). */

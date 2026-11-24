@@ -51,6 +51,25 @@ export class BrowserStorage {
     }
   }
 
+  /**
+   * Lista as chaves desta aplicação (sem o prefixo do namespace).
+   * Usado pela limpeza de dados de versões antigas.
+   * @returns {string[]}
+   */
+  keys() {
+    const prefix = `${this.namespace}:`;
+    const result = [];
+    try {
+      for (let i = 0; i < this.storage.length; i += 1) {
+        const fullKey = this.storage.key(i);
+        if (fullKey?.startsWith(prefix)) result.push(fullKey.slice(prefix.length));
+      }
+    } catch {
+      // Armazenamento indisponível: nenhuma chave
+    }
+    return result;
+  }
+
   /** Remove uma chave. */
   remove(key) {
     try {

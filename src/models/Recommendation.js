@@ -8,12 +8,13 @@
 import { TARGET_GROUPS } from '../config/constants.js';
 
 export class Recommendation {
-  constructor({ id, title, description, riskLevelId, targetGroup = TARGET_GROUPS.GENERAL }) {
+  constructor({ id, title, description, riskLevelId, targetGroup = TARGET_GROUPS.GENERAL, illustration = null }) {
     this.id = id; // código fixo, ex.: "alerta-01"
     this.title = title;
     this.description = description;
     this.riskLevelId = riskLevelId; // código do RiskLevel
     this.targetGroup = targetGroup; // geral, crianças, idosos ou trabalho ao ar livre
+    this.illustration = illustration; // nome do arquivo em assets/img/care (sem .svg)
     Object.freeze(this); // catálogo imutável
   }
 
